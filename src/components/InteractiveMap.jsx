@@ -487,12 +487,13 @@ export default function InteractiveMap() {
       return undefined;
     }
 
-    // Agrupa los pines que caen a menos de 24px uno del otro (varía con el zoom)
+    // Agrupa los pines que caen a menos de 40px uno del otro (varía con el zoom)
+    // Así los puntos cercanos se muestran como un solo botón con número
     const calcular = () => {
       const salida = [];
       visibles.forEach((p) => {
         const pt = map.latLngToContainerPoint([p.lat, p.lng]);
-        const g = salida.find((x) => Math.hypot(x.x - pt.x, x.y - pt.y) < 24);
+        const g = salida.find((x) => Math.hypot(x.x - pt.x, x.y - pt.y) < 40);
         if (g) g.puntos.push(p);
         else salida.push({ x: pt.x, y: pt.y, puntos: [p] });
       });
@@ -549,9 +550,9 @@ export default function InteractiveMap() {
       const latlng = map.containerPointToLatLng([g.x, g.y]);
       const icon = L.divIcon({
         className: '',
-        html: `<div class="hito-pin hito-stack">${g.puntos.length}</div>`,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
+        html: `<div class="hito-pin hito-stack" style="font-size:16px; font-weight:900;">${g.puntos.length}</div>`,
+        iconSize: [42, 42],
+        iconAnchor: [21, 21],
       });
       L.marker(latlng, {
         icon,

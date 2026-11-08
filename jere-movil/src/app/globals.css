@@ -157,9 +157,10 @@
 
 /* ---------- Pines apilados (varios eventos encimados) ---------- */
 .hito-stack {
-  width: 34px;
-  height: 34px;
-  font-size: 14px;
+  width: 42px;
+  height: 42px;
+  font-size: 18px;
+  font-weight: 900;
   background: #fff;
   color: #1f2a44;
   cursor: pointer;
