@@ -14,7 +14,12 @@ const baseLinks = [
   { href: '/videos', key: 'nav_videos', emoji: '🎬' },
   { href: '/recursos', key: 'nav_resources', emoji: '🎁' },
   { href: '/redes', key: 'nav_social', emoji: '📲' },
+];
+
+// La pestaña "Design System" es solo para el admin.
+const adminLinks = [
   { href: '/design-system', key: 'nav_design', emoji: '🎨' },
+  { href: '/admin', key: 'nav_admin', emoji: '⚙️' },
 ];
 
 export default function Navbar() {
@@ -23,17 +28,20 @@ export default function Navbar() {
   const { user, isAdmin, login, logout } = useAuth();
   const [open, setOpen] = useState(false);
 
-  const links = isAdmin ? [...baseLinks, { href: '/admin', key: 'nav_admin', emoji: '⚙️' }] : baseLinks;
+  const links = isAdmin ? [...baseLinks, ...adminLinks] : baseLinks;
   const isActive = (href) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
   return (
     <header className="sticky top-0 z-[3000] h-16 border-b-[3px] border-noche bg-sol">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-3 px-3 sm:px-5">
-        <Link href="/" className="flex items-center gap-2 font-display text-xl font-extrabold sm:text-2xl" onClick={() => setOpen(false)}>
-          <motion.span whileHover={{ rotate: [0, -12, 12, 0] }} className="text-2xl" aria-hidden>
-            🚐
+        <Link href="/" className="flex items-center" onClick={() => setOpen(false)} title="Jere Móvil">
+          <motion.span
+            whileHover={{ rotate: [0, -12, 12, 0] }}
+            className="relative top-3 grid h-20 w-20 shrink-0 -my-1 place-items-center overflow-hidden rounded-full border-[3px] border-noche bg-white shadow-comic"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo_jere.png" alt="Logo Jere Móvil" className="h-16 w-16 object-contain" />
           </motion.span>
-          {t('brand')}
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">

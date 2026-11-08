@@ -37,12 +37,16 @@ export const COLLECTIONS = {
  * @property {string} [titulo_en]
  * @property {string} descripcion
  * @property {string} [descripcion_en]
+ * @property {string} [categoria]     // 'importante' | 'rara' | 'acampada' | 'foto' | 'recorrido'
+ * @property {number} [orden]         // posición manual en la secuencia de ruta
  * @property {string[]} fotos          // URLs de Firebase Storage
  * @property {string} [videoUrl]       // YouTube o archivo directo
  */
 export const nuevoPunto = () => ({
   ciudad: '', pais: '', lat: '', lng: '',
   fecha: '', hora: '12:00',
+  categoria: 'importante',
+  orden: 0,
   titulo: '', titulo_en: '', descripcion: '', descripcion_en: '',
   fotos: [], videoUrl: '',
 });

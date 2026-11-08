@@ -31,6 +31,9 @@ const dict = {
     map_close: 'Cerrar',
     map_no_results: 'Sin resultados',
     map_stop: 'Parada',
+    map_all: 'Todos',
+    map_filters: 'Filtros de la bitácora por categoría',
+    map_speed: 'Velocidad del recorrido (clic para cambiar)',
 
     about_title: '¿Quién soy?',
     about_empty: 'Pronto vas a encontrar acá la historia de Jere.',
@@ -98,6 +101,9 @@ const dict = {
     map_close: 'Close',
     map_no_results: 'No results',
     map_stop: 'Stop',
+    map_all: 'All',
+    map_filters: 'Trip log filters by category',
+    map_speed: 'Trip animation speed (click to change)',
 
     about_title: 'Who am I?',
     about_empty: "Jere's story will be here soon.",

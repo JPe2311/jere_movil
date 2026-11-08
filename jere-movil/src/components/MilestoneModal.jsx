@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { CATEGORIAS_PUNTOS } from '@/lib/categories';
 import { useI18n } from '@/lib/i18n';
 import { formatDateTime, loc, youtubeId } from '@/lib/utils';
 
@@ -22,6 +23,8 @@ export default function MilestoneModal({ punto, onClose }) {
 
   const fotos = punto?.fotos || [];
   const yt = punto?.videoUrl ? youtubeId(punto.videoUrl) : null;
+  const cat = CATEGORIAS_PUNTOS[punto?.categoria] || CATEGORIAS_PUNTOS.importante;
+  const numero = punto?.numero ?? (Number.isFinite(punto?.orden) ? punto.orden : null);
 
   return (
     <AnimatePresence>
@@ -47,7 +50,16 @@ export default function MilestoneModal({ punto, onClose }) {
           >
             <div className="flex items-start justify-between gap-3 border-b-[3px] border-noche bg-sol p-4">
               <div className="min-w-0">
-                <p className="text-xs font-extrabold uppercase tracking-wide">{formatDateTime(punto.ts, lang)}</p>
+                <p className="flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase tracking-wide">
+                  <span>{formatDateTime(punto.ts, lang)}</span>
+                  <span
+                    className="rounded-full border-2 border-noche px-2 py-0.5 text-[11px] font-black normal-case"
+                    style={{ backgroundColor: cat.pinBg, color: cat.textColor }}
+                  >
+                    {numero ? `#${numero} · ` : ''}
+                    {cat.emoji} {lang === 'en' ? cat.nombre_en : cat.nombre}
+                  </span>
+                </p>
                 <h2 className="font-display text-2xl font-extrabold leading-tight sm:text-3xl">{loc(punto, 'titulo', lang)}</h2>
                 <p className="text-sm font-bold">
                   📍 {punto.ciudad}

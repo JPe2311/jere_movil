@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { collection, deleteDoc, doc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useCollection } from '@/lib/useCollection';
 import { nuevoPunto } from '@/lib/schemas';
+import { CATEGORIAS_PUNTOS, LISTA_CATEGORIAS } from '@/lib/categories';
+import { ordenarPuntos, planInsercion, planMovimiento, planRenumerar, persistirOrden } from '@/lib/orden';
 import { uploadFiles } from '@/lib/storageUpload';
 import { formatDate, toDateInput, toMillis, toTimeInput } from '@/lib/utils';
 import { Field, Notice, Panel, PhotoStrip } from './ui';
@@ -16,6 +18,9 @@ export default function PuntosAdmin() {
   const [files, setFiles] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState({ text: '', tone: 'error' });
+
+  // Orden en el que se muestran y numeran los puntos (mismo criterio que el mapa)
+  const ordenados = useMemo(() => ordenarPuntos(items), [items]);
 
   // --- Geocodificación con Nominatim (OpenStreetMap). Política de uso: máx. 1 req/s → debounce.
   const [q, setQ] = useState('');
@@ -82,6 +87,7 @@ export default function PuntosAdmin() {
     setForm({
       ciudad: p.ciudad || '', pais: p.pais || '', lat: p.lat, lng: p.lng,
       fecha: toDateInput(ms), hora: toTimeInput(ms),
+      categoria: p.categoria || 'importante',
       titulo: p.titulo || '', titulo_en: p.titulo_en || '',
       descripcion: p.descripcion || '', descripcion_en: p.descripcion_en || '',
       fotos: p.fotos || [], videoUrl: p.videoUrl || '',
@@ -104,6 +110,23 @@ export default function PuntosAdmin() {
     try {
       const ref = editId ? doc(db, 'puntos_mapa', editId) : doc(collection(db, 'puntos_mapa'));
       const nuevas = files.length ? await uploadFiles(files, `puntos/${ref.id}`) : [];
+      const fechaMs = new Date(`${form.fecha}T${form.hora || '12:00'}`).getTime();
+
+      // Numeración: manda la fecha. Un punto nuevo (o una fecha cambiada) entra
+      // en su lugar y los números siguientes se corren solos (+1).
+      // Si la fecha no cambió al editar, se respeta el lugar manual (↑ ↓).
+      const fechaAnterior = editId ? toMillis(items.find((x) => x.id === editId)?.fechaHora) : NaN;
+      const cambioFecha = !Number.isFinite(fechaAnterior) || fechaAnterior !== fechaMs;
+      const plan =
+        editId && !cambioFecha
+          ? planRenumerar(items)
+          : planInsercion(
+              items.filter((x) => x.id !== ref.id),
+              { id: ref.id },
+              fechaMs
+            );
+      const orden = plan.find((x) => x.id === ref.id)?.orden ?? 1;
+
       await setDoc(
         ref,
         {
@@ -111,18 +134,29 @@ export default function PuntosAdmin() {
           pais: form.pais,
           lat: form.lat,
           lng: form.lng,
-          fechaHora: Timestamp.fromDate(new Date(`${form.fecha}T${form.hora || '12:00'}`)),
+          fechaHora: Timestamp.fromDate(new Date(fechaMs)),
           titulo: form.titulo,
           titulo_en: form.titulo_en,
           descripcion: form.descripcion,
           descripcion_en: form.descripcion_en,
+          categoria: form.categoria || 'importante',
+          orden,
           fotos: [...form.fotos, ...nuevas],
           videoUrl: form.videoUrl,
         },
         { merge: true }
       );
+      await persistirOrden(
+        plan.filter((x) => x.id !== ref.id),
+        items.filter((x) => x.id !== ref.id)
+      );
       reset();
-      setMsg({ text: editId ? 'Punto actualizado ✅' : 'Punto creado ✅ — la ruta se recalcula sola.', tone: 'ok' });
+      setMsg({
+        text: editId
+          ? 'Punto actualizado ✅'
+          : `Punto creado ✅ — entró en la posición #${orden} y los números siguientes se corrieron.`,
+        tone: 'ok',
+      });
     } catch (err) {
       console.error(err);
       setMsg({ text: err.message, tone: 'error' });
@@ -135,6 +169,19 @@ export default function PuntosAdmin() {
     if (!window.confirm(`¿Borrar "${p.titulo || p.ciudad}"?`)) return;
     try {
       await deleteDoc(doc(db, 'puntos_mapa', p.id));
+      const restantes = items.filter((x) => x.id !== p.id);
+      await persistirOrden(planRenumerar(restantes), restantes);
+    } catch (err) {
+      setMsg({ text: err.message, tone: 'error' });
+    }
+  }
+
+  /** Mueve un punto un lugar arriba (dir: -1) o abajo (dir: +1) en la numeración. */
+  async function mover(p, dir) {
+    try {
+      const plan = planMovimiento(items, p.id, dir);
+      if (!plan) return;
+      await persistirOrden(plan, items);
     } catch (err) {
       setMsg({ text: err.message, tone: 'error' });
     }
@@ -172,6 +219,33 @@ export default function PuntosAdmin() {
           <Field label="Hora">
             <input type="time" className="input" value={form.hora} onChange={set('hora')} />
           </Field>
+
+          <div className="sm:col-span-2">
+            <span className="text-sm font-extrabold">Categoría</span>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {LISTA_CATEGORIAS.map((c) => {
+                const on = form.categoria === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, categoria: c.id }))}
+                    aria-pressed={on}
+                    title={c.desc}
+                    className={`rounded-full border-[3px] border-noche px-3 py-1 font-display text-xs font-extrabold transition ${
+                      on ? 'shadow-comic-sm' : 'bg-white text-noche/45 opacity-70 hover:opacity-100'
+                    }`}
+                    style={on ? { backgroundColor: c.pinBg, color: c.textColor } : undefined}
+                  >
+                    {c.emoji} {c.nombre}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="block text-xs font-semibold text-noche/60">
+              Se usa para filtrar los puntos en el mapa.
+            </span>
+          </div>
 
           <Field label="Título (ES)">
             <input className="input" value={form.titulo} onChange={set('titulo')} required />
@@ -216,26 +290,65 @@ export default function PuntosAdmin() {
       </Panel>
 
       <Panel title={`🗺️ Puntos cargados (${items.length})`}>
-        <p className="text-sm font-semibold">La ruta del mapa une estos puntos en orden cronológico automáticamente.</p>
+        <p className="text-sm font-semibold">
+          La numeración sigue la <b>fecha</b>: si cargás un punto con fecha anterior, los números
+          siguientes se corren solos. Con <b>▲ ▼</b> también podés mover un punto a mano.
+        </p>
         <ul className="divide-y-2 divide-noche/10">
-          {items.map((p, i) => (
-            <li key={p.id} className="flex flex-wrap items-center gap-3 py-2">
-              <span className="hito-pin shrink-0">{i + 1}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-extrabold">{p.titulo || p.ciudad}</p>
-                <p className="text-xs font-semibold text-noche/70">
-                  {p.ciudad}
-                  {p.pais ? `, ${p.pais}` : ''} · {formatDate(toMillis(p.fechaHora), 'es', { dateStyle: 'medium', timeStyle: 'short' })} · {(p.fotos || []).length} foto(s)
-                </p>
-              </div>
-              <button type="button" className="btn-ghost !py-1 text-sm" onClick={() => edit(p)}>
-                Editar
-              </button>
-              <button type="button" className="btn-rosa !py-1 text-sm" onClick={() => remove(p)}>
-                Borrar
-              </button>
-            </li>
-          ))}
+          {ordenados.map((p, i) => {
+            const cat = CATEGORIAS_PUNTOS[p.categoria] || CATEGORIAS_PUNTOS.importante;
+            return (
+              <li key={p.id} className="flex flex-wrap items-center gap-3 py-2">
+                <span
+                  className="hito-pin shrink-0"
+                  style={{ backgroundColor: cat.pinBg, color: cat.textColor }}
+                >
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-extrabold">{p.titulo || p.ciudad}</p>
+                  <p className="text-xs font-semibold text-noche/70">
+                    <span
+                      className="mr-1 inline-block rounded-full border border-noche px-1.5 py-px text-[10px] font-black"
+                      style={{ backgroundColor: cat.pinBg, color: cat.textColor }}
+                    >
+                      {cat.emoji} {cat.nombre}
+                    </span>
+                    {p.ciudad}
+                    {p.pais ? `, ${p.pais}` : ''} · {formatDate(toMillis(p.fechaHora), 'es', { dateStyle: 'medium', timeStyle: 'short' })} · {(p.fotos || []).length} foto(s)
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col gap-1">
+                  <button
+                    type="button"
+                    className="btn-ghost !px-2 !py-0.5 text-sm"
+                    disabled={i === 0}
+                    onClick={() => mover(p, -1)}
+                    title="Subir en la numeración"
+                    aria-label="Subir en la numeración"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost !px-2 !py-0.5 text-sm"
+                    disabled={i === ordenados.length - 1}
+                    onClick={() => mover(p, 1)}
+                    title="Bajar en la numeración"
+                    aria-label="Bajar en la numeración"
+                  >
+                    ▼
+                  </button>
+                </div>
+                <button type="button" className="btn-ghost !py-1 text-sm" onClick={() => edit(p)}>
+                  Editar
+                </button>
+                <button type="button" className="btn-rosa !py-1 text-sm" onClick={() => remove(p)}>
+                  Borrar
+                </button>
+              </li>
+            );
+          })}
           {items.length === 0 && <li className="py-2 text-sm font-semibold">Todavía no hay puntos: el mapa muestra datos de ejemplo.</li>}
         </ul>
       </Panel>

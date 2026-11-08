@@ -8,7 +8,10 @@ import { animate, motion, useMotionValue } from 'framer-motion';
 import { useCollection } from '@/lib/useCollection';
 import { demoPuntos } from '@/lib/demoData';
 import { toMillis } from '@/lib/utils';
+import { CATEGORIAS_PUNTOS, LISTA_CATEGORIAS } from '@/lib/categories';
+import { ordenarPuntos } from '@/lib/orden';
 import { useI18n } from '@/lib/i18n';
+import { buildFullRoadPath } from '@/lib/routing';
 import TimelineSlider from './TimelineSlider';
 import CitySearch from './CitySearch';
 import MilestoneModal from './MilestoneModal';
@@ -17,7 +20,10 @@ import { createHiluxCamperModel } from './camper3d/createCamperModel';
 
 const DAY = 86_400_000;
 
-// Proveedores de mapas 100% Open Source de la comunidad OpenStreetMap (CERO API Keys necesarias)
+/** Categoría de un punto (los puntos viejos sin categoría se consideran "importante"). */
+const catDe = (p) => (CATEGORIAS_PUNTOS[p?.categoria] ? p.categoria : 'importante');
+
+// Proveedores de mapas 100% Open Source de la comunidad OpenStreetMap (CERO API Keys)
 const OPEN_SOURCE_MAPS = {
   osm: {
     name: 'OpenStreetMap Oficial (100% Libre)',
@@ -48,6 +54,14 @@ const OPEN_SOURCE_MAPS = {
   },
 };
 
+/** Ícono visible de cada tipo de mapa (el select queda transparente encima). */
+const MAP_STYLE_ICONS = {
+  osm: '🌍',
+  hot: '☀️',
+  topo: '🏔️',
+  cyclosm: '🚲',
+};
+
 /**
  * Calcula el rumbo geográfico en grados (0° = Norte, 90° = Este, 180° = Sur, 270° = Oeste)
  */
@@ -60,7 +74,27 @@ function calculateHeading(p1, p2) {
   return angleDeg;
 }
 
-/** Posición y rumbo de La Bebi en el instante ts, interpolando entre puntos de la ruta. */
+/** Calcula posición y ángulo sobre la carretera real */
+function positionOnRoad(roadPath, frac) {
+  if (!roadPath || roadPath.length === 0) return null;
+  if (roadPath.length === 1) return { lat: roadPath[0][0], lng: roadPath[0][1], heading: 0, baseIdx: 0 };
+
+  const maxIdx = roadPath.length - 1;
+  const floatIdx = Math.max(0, Math.min(maxIdx, frac * maxIdx));
+  const baseIdx = Math.floor(floatIdx);
+  const rem = floatIdx - baseIdx;
+
+  const a = roadPath[baseIdx];
+  const b = roadPath[Math.min(baseIdx + 1, maxIdx)];
+
+  const lat = a[0] + (b[0] - a[0]) * rem;
+  const lng = a[1] + (b[1] - a[1]) * rem;
+
+  const heading = calculateHeading({ lat: a[0], lng: a[1] }, { lat: b[0], lng: b[1] });
+  return { lat, lng, heading, baseIdx };
+}
+
+/** Posición entre hitos (usada como fallback mientras carga la carretera) */
 function positionAt(puntos, ts) {
   const last = puntos[puntos.length - 1];
   if (ts <= puntos[0].ts) {
@@ -85,17 +119,19 @@ function positionAt(puntos, ts) {
 }
 
 export default function InteractiveMap() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { items, loading } = useCollection('puntos_mapa', 'fechaHora', 'asc');
   const [nowMs] = useState(() => Date.now());
 
   const isDemo = !loading && items.length === 0;
 
-  // Mapa Open Source seleccionado por defecto: OpenStreetMap Oficial (Cero API Keys)
+  // Mapa Open Source seleccionado por defecto (100% Libre sin API Key)
   const [mapStyle, setMapStyle] = useState('osm');
   const [show3DModal, setShow3DModal] = useState(false);
+  const [roadPath, setRoadPath] = useState([]);
+  const [roadLoading, setRoadLoading] = useState(false);
 
-  // Puntos ordenados cronológicamente
+  // Puntos en orden cronológico (manda la fecha: así viajan la ruta y el timeline)
   const puntos = useMemo(() => {
     if (loading) return [];
     const src = items.length ? items : demoPuntos;
@@ -104,6 +140,35 @@ export default function InteractiveMap() {
       .filter((p) => Number.isFinite(p.ts) && Number.isFinite(p.lat) && Number.isFinite(p.lng))
       .sort((a, b) => a.ts - b.ts);
   }, [items, loading]);
+
+  // Números de la bitácora (orden efectivo: `orden` si todos lo tienen, si no la fecha)
+  const numeros = useMemo(() => {
+    const m = new Map();
+    ordenarPuntos(puntos).forEach((p, i) => m.set(p.id, i + 1));
+    return m;
+  }, [puntos]);
+
+  // Filtros por categoría (todos activos por defecto)
+  const [activas, setActivas] = useState(() => new Set(LISTA_CATEGORIAS.map((c) => c.id)));
+  const visibles = useMemo(() => puntos.filter((p) => activas.has(catDe(p))), [puntos, activas]);
+  const conteo = useMemo(() => {
+    const m = {};
+    puntos.forEach((p) => {
+      const k = catDe(p);
+      m[k] = (m[k] || 0) + 1;
+    });
+    return m;
+  }, [puntos]);
+
+  const toggleCat = useCallback((id) => {
+    setActivas((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const activarTodas = useCallback(() => setActivas(new Set(LISTA_CATEGORIAS.map((c) => c.id))), []);
 
   // Rango del timeline
   const { start, end } = useMemo(() => {
@@ -118,6 +183,14 @@ export default function InteractiveMap() {
   const [selectedId, setSelectedId] = useState(null);
   const [playing, setPlaying] = useState(false);
 
+  // Velocidad del recorrido animado: 0.5× (lento) … 4× (rápido)
+  const VELOCIDADES = [0.5, 1, 2, 4];
+  const [velocidad, setVelocidad] = useState(1);
+  const velocidadRef = useRef(1);
+  useEffect(() => {
+    velocidadRef.current = velocidad;
+  }, [velocidad]);
+
   const mapEl = useRef(null);
   const mapRef = useRef(null);
   const tileLayerRef = useRef(null);
@@ -128,6 +201,36 @@ export default function InteractiveMap() {
   const threeRef = useRef(null);
   const targetYawRef = useRef(Math.PI);
   const isDrivingRef = useRef(false);
+  const roadPathRef = useRef([]);
+
+  /* ---------- 0) Obtener la carretera real (OSRM libre) que une las ciudades ---------- */
+  useEffect(() => {
+    if (!puntos.length) {
+      setRoadPath([]);
+      roadPathRef.current = [];
+      return;
+    }
+    let cancelled = false;
+    setRoadLoading(true);
+
+    buildFullRoadPath(puntos).then((coords) => {
+      if (cancelled) return;
+      if (coords && coords.length > 0) {
+        setRoadPath(coords);
+        roadPathRef.current = coords;
+
+        // Si la capa ya existe en el mapa, actualizar el trazado con las curvas reales
+        if (layersRef.current.full) {
+          layersRef.current.full.setLatLngs(coords);
+        }
+      }
+      setRoadLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [puntos]);
 
   /* ---------- 1) Crear mapa Leaflet Open Source ---------- */
   useEffect(() => {
@@ -180,7 +283,8 @@ export default function InteractiveMap() {
       const target = Math.min(1, Math.max(0, (p.ts - start) / (end - start)));
       isDrivingRef.current = true;
       animRef.current = animate(progress, target, {
-        duration,
+        // A mayor velocidad, el salto a un punto también es más rápido
+        duration: duration / velocidadRef.current,
         ease: 'easeInOut',
         onComplete: () => {
           isDrivingRef.current = false;
@@ -207,31 +311,23 @@ export default function InteractiveMap() {
     pickRef.current = pick;
   }, [pick]);
 
-  /* ---------- 2) Capas: Ruta, Hitos y Camioneta 3D Real (Three.js WebGL) ---------- */
+  /* ---------- 2) Capas: Carretera Real, Hitos y Camioneta 3D ---------- */
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !puntos.length) return undefined;
 
-    const latlngs = puntos.map((p) => [p.lat, p.lng]);
+    // Trazado inicial: si la carretera real ya está cargada se usa roadPath, si no los puntos directos temporalmente
+    const latlngs = roadPath.length > 0 ? roadPath : puntos.map((p) => [p.lat, p.lng]);
+
+    // Trazado completo de la carretera (línea punteada)
     const full = L.polyline(latlngs, {
-      color: '#1F2A44', weight: 4, opacity: 0.25, dashArray: '2 10', lineCap: 'round',
+      color: '#1F2A44', weight: 4, opacity: 0.35, dashArray: '4 8', lineCap: 'round',
     }).addTo(map);
+
+    // Trazado recorrido (línea naranja viva continua)
     const done = L.polyline([], {
       color: '#FF7A3D', weight: 6, opacity: 0.95, lineCap: 'round', lineJoin: 'round',
     }).addTo(map);
-
-    const group = L.layerGroup().addTo(map);
-    puntos.forEach((p, i) => {
-      const icon = L.divIcon({
-        className: '',
-        html: `<div class="hito-pin">${i + 1}</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      });
-      L.marker([p.lat, p.lng], { icon, title: p.ciudad || p.titulo })
-        .on('click', () => pickRef.current(p.id, { fly: false }))
-        .addTo(group);
-    });
 
     // Marcador con contenedor para el lienzo Three.js 3D
     const bebiIcon = L.divIcon({
@@ -251,10 +347,10 @@ export default function InteractiveMap() {
     const bebi = L.marker(latlngs[0], { icon: bebiIcon, zIndexOffset: 1000, interactive: true }).addTo(map);
     bebi.on('click', () => setShow3DModal(true));
 
-    layersRef.current = { done, bebi };
-    map.fitBounds(L.latLngBounds(latlngs).pad(0.25), { maxZoom: 6 });
+    layersRef.current = { done, bebi, full };
+    map.fitBounds(L.latLngBounds(puntos.map((p) => [p.lat, p.lng])).pad(0.25), { maxZoom: 6 });
 
-    // Inicializar el motor 3D WebGL de Three.js dentro del marcador de Leaflet
+    // Inicializar el motor 3D WebGL de Three.js
     let threeInstance = null;
     let animFrameId = null;
 
@@ -269,12 +365,10 @@ export default function InteractiveMap() {
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
       const scene = new THREE.Scene();
-      // Cámara elevada con perspectiva isométrica que mira al centro de la camioneta
       const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
       camera.position.set(0, 5.8, 5.0);
       camera.lookAt(0, 0.85, 0);
 
-      // Iluminación solar exterior y ambiente
       const ambientLight = new THREE.AmbientLight(0xfff8ee, 1.8);
       scene.add(ambientLight);
 
@@ -287,8 +381,10 @@ export default function InteractiveMap() {
       fillLight.position.set(-6, 6, -6);
       scene.add(fillLight);
 
-      // Modelo 3D de La Bebi (Toyota Hilux con módulo camper y pintura de montaña)
       const camper = createHiluxCamperModel();
+      // Escala reducida para que La Bebi entre COMPLETA dentro del
+      // contenedor de 130px (al girar, las esquinas no se cortan).
+      camper.root.scale.setScalar(0.6);
       scene.add(camper.root);
 
       slot.innerHTML = '';
@@ -303,7 +399,6 @@ export default function InteractiveMap() {
       };
       threeRef.current = threeInstance;
 
-      // Loop de render continuo en 3D
       let clock = new THREE.Clock();
       const loop = () => {
         animFrameId = requestAnimationFrame(loop);
@@ -314,7 +409,6 @@ export default function InteractiveMap() {
           const { camper: c, currentYaw, renderer: r, scene: sc, camera: cam } = threeRef.current;
           const target = targetYawRef.current;
 
-          // Interpolación suave del ángulo yaw (giro horizontal en 3D)
           let diff = target - currentYaw;
           while (diff < -Math.PI) diff += Math.PI * 2;
           while (diff > Math.PI) diff -= Math.PI * 2;
@@ -322,9 +416,8 @@ export default function InteractiveMap() {
 
           c.setHeading(threeRef.current.currentYaw);
 
-          // Si avanza por la ruta, girar neumáticos y amortiguación de suspensión
           if (isDrivingRef.current) {
-            c.spinWheels(0.18);
+            c.spinWheels(0.2);
             c.root.position.y = Math.sin(time * 12) * 0.04;
           } else {
             c.root.position.y = Math.sin(time * 2.5) * 0.015;
@@ -336,7 +429,6 @@ export default function InteractiveMap() {
       loop();
     };
 
-    // Dar tiempo mínimo a que Leaflet inserte el DOM
     const timer = setTimeout(setupThreeOnMarker, 120);
 
     return () => {
@@ -348,35 +440,77 @@ export default function InteractiveMap() {
       threeRef.current = null;
       full.remove();
       done.remove();
-      group.remove();
       bebi.remove();
       layersRef.current = {};
     };
-  }, [puntos]);
+  }, [puntos, roadPath]);
 
-  /* ---------- 3) El timeline mueve y GIRA en 3D a La Bebi ---------- */
+  /* ---------- 2.1) Pines de la bitácora: numerados y coloreados por categoría ---------- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !visibles.length) return undefined;
+
+    const group = L.layerGroup().addTo(map);
+    visibles.forEach((p) => {
+      const cat = CATEGORIAS_PUNTOS[catDe(p)] || CATEGORIAS_PUNTOS.importante;
+      const n = numeros.get(p.id) ?? 0;
+      const sel = p.id === selectedId;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="hito-pin${sel ? ' is-sel' : ''}" style="background:${cat.pinBg};color:${cat.textColor}">${n}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      L.marker([p.lat, p.lng], {
+        icon,
+        title: `${n}. ${cat.emoji} ${p.ciudad || p.titulo || ''}`,
+        zIndexOffset: sel ? 400 : 0,
+      })
+        .on('click', () => pickRef.current(p.id, { fly: false }))
+        .addTo(group);
+    });
+
+    return () => {
+      group.remove();
+    };
+  }, [visibles, numeros, selectedId]);
+
+  /* ---------- 3) El timeline mueve a La Bebi siguiendo las curvas de la carretera ---------- */
   const update = useCallback(
     (frac) => {
       const { done, bebi } = layersRef.current;
       if (!bebi || !puntos.length) return;
-      const ts = start + frac * (end - start);
-      const pos = positionAt(puntos, ts);
-      bebi.setLatLng([pos.lat, pos.lng]);
 
-      // IMPORTANTE:
-      // En Three.js, la rotación 3D es sobre el eje Y (yaw vertical).
-      // Las ruedas SIEMPRE están en el suelo (Y=0) y el techo arriba.
-      // Calculamos el yaw para que el frente de la Hilux apunte exactamente a la carretera:
-      if (Number.isFinite(pos.heading)) {
+      const rPath = roadPathRef.current;
+      let pos;
+
+      if (rPath && rPath.length > 1) {
+        // Posición exacta sobre la carretera real
+        pos = positionOnRoad(rPath, frac);
+        bebi.setLatLng([pos.lat, pos.lng]);
+
+        const completedRoad = rPath.slice(0, pos.baseIdx + 1).concat([[pos.lat, pos.lng]]);
+        done.setLatLngs(completedRoad);
+      } else {
+        // Fallback mientras carga la carretera
+        const ts = start + frac * (end - start);
+        pos = positionAt(puntos, ts);
+        bebi.setLatLng([pos.lat, pos.lng]);
+
+        const path = puntos.slice(0, pos.idx + 1).map((p) => [p.lat, p.lng]);
+        path.push([pos.lat, pos.lng]);
+        done.setLatLngs(path);
+      }
+
+      // Orientar la camioneta 3D en la dirección de la curva de la carretera
+      if (pos && Number.isFinite(pos.heading)) {
         targetYawRef.current = Math.PI - (pos.heading * Math.PI) / 180;
       }
 
-      const path = puntos.slice(0, pos.idx + 1).map((p) => [p.lat, p.lng]);
-      path.push([pos.lat, pos.lng]);
-      done.setLatLngs(path);
-
+      const ts = start + frac * (end - start);
       const day = Math.floor((ts - start) / DAY) + 1;
-      setCurrent((prev) => (prev.idx === pos.idx && prev.day === day ? prev : { idx: pos.idx, day, ts }));
+      const idx = pos?.idx ?? Math.floor(frac * (puntos.length - 1));
+      setCurrent((prev) => (prev.idx === idx && prev.day === day ? prev : { idx, day, ts }));
     },
     [puntos, start, end]
   );
@@ -387,6 +521,24 @@ export default function InteractiveMap() {
   }, [progress, update]);
 
   /* ---------- Controles de reproducción ---------- */
+  /** Arranca (o re-arranca desde `from`) el recorrido a la velocidad actual. */
+  const reproducir = useCallback(
+    (from) => {
+      animRef.current?.stop();
+      isDrivingRef.current = true;
+      setPlaying(true);
+      animRef.current = animate(progress, 1, {
+        duration: Math.max(4, (1 - from) * 32) / velocidadRef.current,
+        ease: 'linear',
+        onComplete: () => {
+          setPlaying(false);
+          isDrivingRef.current = false;
+        },
+      });
+    },
+    [progress]
+  );
+
   const togglePlay = () => {
     if (playing) {
       stop();
@@ -397,17 +549,18 @@ export default function InteractiveMap() {
       progress.set(0);
       from = 0;
     }
-    setPlaying(true);
-    isDrivingRef.current = true;
-    animRef.current = animate(progress, 1, {
-      duration: Math.max(4, (1 - from) * 30),
-      ease: 'linear',
-      onComplete: () => {
-        setPlaying(false);
-        isDrivingRef.current = false;
-      },
-    });
+    reproducir(from);
   };
+
+  // Si cambia la velocidad mientras se reproduce, se re-arranca desde
+  // el punto actual (sin salto ni pérdida de lugar).
+  const velPrevRef = useRef(velocidad);
+  useEffect(() => {
+    if (velPrevRef.current === velocidad) return;
+    velPrevRef.current = velocidad;
+    if (playing) reproducir(progress.get());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [velocidad]);
 
   const scrub = (v) => {
     stop();
@@ -420,53 +573,97 @@ export default function InteractiveMap() {
 
   useEffect(() => () => animRef.current?.stop(), []);
 
-  const selected = puntos.find((p) => p.id === selectedId) || null;
+  const selected = useMemo(() => {
+    const p = puntos.find((x) => x.id === selectedId);
+    return p ? { ...p, numero: numeros.get(p.id) ?? null } : null;
+  }, [puntos, numeros, selectedId]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
       <div ref={mapEl} className="absolute inset-0 z-0" />
 
-      {/* Buscador de ciudades */}
-      <div className="absolute left-3 right-3 top-3 z-[1000] sm:left-5 sm:right-auto sm:w-96">
-        <CitySearch puntos={puntos} onSelect={(p) => pick(p.id)} />
-      </div>
+      {/* Panel superior DERECHO: controles, buscador y filtros de la bitácora */}
+      <div className="absolute left-3 right-3 top-3 z-[1000] flex flex-col items-end gap-2 sm:left-auto sm:right-5">
+        {/* Fila de controles: trazado, tipo de mapa (solo ícono) y modo demo */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {/* Indicador de carretera real cargada */}
+          {roadLoading && (
+            <div className="rounded-full border-2 border-noche bg-sol px-2.5 py-1 text-[11px] font-black text-noche shadow-comic-sm animate-pulse">
+              🛣️ Trazando carreteras...
+            </div>
+          )}
 
-      {/* Botonera superior derecha: Mapa Open Source & Visor 3D */}
-      <div className="absolute right-3 top-3 z-[1000] flex flex-wrap items-center justify-end gap-2 sm:right-5">
-        {/* Selector de capa Open Source (Sin API Key) */}
-        <div className="flex items-center gap-1.5 rounded-full border-2 border-noche bg-white/95 px-3 py-1 text-xs font-black shadow-comic-sm backdrop-blur-sm">
-          <span>🗺️</span>
-          <select
-            value={mapStyle}
-            onChange={(e) => setMapStyle(e.target.value)}
-            className="cursor-pointer bg-transparent font-display font-extrabold text-noche outline-none"
-            aria-label="Selector de mapa Open Source"
+          {/* Selector de capa Open Source: solo un ícono (el select queda invisible encima) */}
+          <div
+            className="relative grid h-9 w-9 place-items-center rounded-full border-2 border-noche bg-white/95 text-base shadow-comic-sm backdrop-blur-sm"
+            title={OPEN_SOURCE_MAPS[mapStyle]?.name}
           >
-            <option value="osm">🌍 OpenStreetMap Oficial (100% Libre)</option>
-            <option value="hot">☀️ OSM Humanitario (Cálido)</option>
-            <option value="topo">🏔️ OpenTopoMap (Relieve &amp; Andes)</option>
-            <option value="cyclosm">🚲 CyclOSM (Rutas de Aventura)</option>
-          </select>
+            <span aria-hidden>{MAP_STYLE_ICONS[mapStyle] || '🗺️'}</span>
+            <select
+              value={mapStyle}
+              onChange={(e) => setMapStyle(e.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label="Tipo de mapa"
+            >
+              <option value="osm">🌍 OpenStreetMap Oficial (100% Libre)</option>
+              <option value="hot">☀️ OSM Humanitario (Cálido)</option>
+              <option value="topo">🏔️ OpenTopoMap (Relieve &amp; Andes)</option>
+              <option value="cyclosm">🚲 CyclOSM (Rutas de Aventura)</option>
+            </select>
+          </div>
+
+          {isDemo && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-full border-2 border-noche bg-rosa px-3 py-1 text-xs font-extrabold text-white shadow-comic-sm"
+            >
+              🧪 {t('map_demo')}
+            </motion.div>
+          )}
         </div>
 
-        {/* Botón para abrir el Visor 3D Interactivo de La Bebi */}
-        <button
-          type="button"
-          onClick={() => setShow3DModal(true)}
-          className="btn btn-sol text-xs py-1 px-3 shadow-comic-sm hover:scale-105 active:scale-95 transition-transform"
-        >
-          🚐 La Bebi 3D (360°)
-        </button>
+        {/* Buscador de ciudades (derecha) */}
+        <div className="relative z-20 w-full sm:w-96">
+          <CitySearch puntos={puntos} onSelect={(p) => pick(p.id)} />
+        </div>
 
-        {isDemo && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-full border-2 border-noche bg-rosa px-3 py-1 text-xs font-extrabold text-white shadow-comic-sm"
+        {/* Filtros por categoría de la bitácora (derecha) */}
+        <div
+          className="relative z-10 flex w-full flex-wrap justify-end gap-1.5 sm:w-96"
+          role="group"
+          aria-label={t('map_filters')}
+        >
+          <button
+            type="button"
+            onClick={activarTodas}
+            className={`rounded-full border-2 border-noche px-3 py-1 text-xs font-extrabold shadow-comic-sm backdrop-blur-sm transition ${
+              activas.size === LISTA_CATEGORIAS.length ? 'bg-white/95 text-noche' : 'bg-sol text-noche'
+            }`}
           >
-            🧪 {t('map_demo')}
-          </motion.div>
-        )}
+            🧭 {t('map_all')}
+          </button>
+          {LISTA_CATEGORIAS.map((c) => {
+            const on = activas.has(c.id);
+            const n = conteo[c.id] || 0;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => toggleCat(c.id)}
+                aria-pressed={on}
+                title={`${lang === 'en' ? c.nombre_en : c.nombre} — ${c.desc}`}
+                className={`rounded-full border-2 border-noche px-3 py-1 text-xs font-extrabold shadow-comic-sm backdrop-blur-sm transition ${
+                  on ? '' : 'bg-white/70 text-noche/45'
+                }`}
+                style={on ? { backgroundColor: c.pinBg, color: c.textColor } : undefined}
+              >
+                {c.emoji} {lang === 'en' ? c.corto_en : c.corto}
+                {n > 0 ? ` (${n})` : ''}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {loading && (
@@ -480,6 +677,11 @@ export default function InteractiveMap() {
         <TimelineSlider
           progress={progress}
           puntos={puntos}
+          visibles={visibles}
+          numeros={numeros}
+          velocidad={velocidad}
+          velocidades={VELOCIDADES}
+          onVelocidad={setVelocidad}
           start={start}
           end={end}
           current={current}

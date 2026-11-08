@@ -1,17 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, useMotionValueEvent } from 'framer-motion';
+import { CATEGORIAS_PUNTOS } from '@/lib/categories';
 import { useI18n } from '@/lib/i18n';
 import { formatDate, loc } from '@/lib/utils';
 
-export default function TimelineSlider({ progress, puntos, start, end, current, playing, onPlay, onScrub, onPick }) {
+export default function TimelineSlider({ progress, puntos, visibles, numeros, velocidad, velocidades, onVelocidad, start, end, current, playing, onPlay, onScrub, onPick }) {
   const { t, lang } = useI18n();
   const [val, setVal] = useState(() => Math.round(progress.get() * 1000));
   useMotionValueEvent(progress, 'change', (v) => setVal(Math.round(v * 1000)));
 
+  // Cicla la velocidad: 0.5× → 1× → 2× → 4× → 0.5×…
+  const ciclarVelocidad = () => {
+    const lista = velocidades || [0.5, 1, 2, 4];
+    const i = lista.indexOf(velocidad);
+    onVelocidad?.(lista[(i + 1) % lista.length]);
+  };
+
   const span = end - start || 1;
   const here = puntos[current.idx];
+
+  // Solo se dibujan los nodos visibles según el filtro de categorías
+  const visiblesSet = useMemo(
+    () => new Set((visibles || puntos).map((p) => p.id)),
+    [visibles, puntos]
+  );
 
   return (
     <motion.div
@@ -45,6 +59,19 @@ export default function TimelineSlider({ progress, puntos, start, end, current, 
             </div>
           )}
         </div>
+
+        {/* Velocidad del recorrido: clic para cambiar (0.5× … 4×) */}
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          onClick={ciclarVelocidad}
+          className="shrink-0 rounded-full border-[3px] border-noche bg-white px-2.5 py-1.5 font-display text-xs font-black text-noche shadow-comic-sm sm:text-sm"
+          aria-label={t('map_speed')}
+          title={t('map_speed')}
+        >
+          ⚡ {velocidad}×
+        </motion.button>
       </div>
 
       <div className="relative h-10">
@@ -55,6 +82,9 @@ export default function TimelineSlider({ progress, puntos, start, end, current, 
 
         {/* nodos de los hitos */}
         {puntos.map((p, i) => {
+          if (!visiblesSet.has(p.id)) return null;
+          const cat = CATEGORIAS_PUNTOS[p.categoria] || CATEGORIAS_PUNTOS.importante;
+          const n = numeros?.get(p.id) ?? i + 1;
           const pct = ((p.ts - start) / span) * 100;
           const passed = i <= current.idx;
           return (
@@ -64,12 +94,10 @@ export default function TimelineSlider({ progress, puntos, start, end, current, 
               onClick={() => onPick(p.id)}
               whileHover={{ scale: 1.5, y: -3 }}
               whileTap={{ scale: 0.9 }}
-              style={{ left: `${pct}%` }}
-              className={`absolute top-1/2 z-20 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-noche ${
-                passed ? 'bg-monte' : 'bg-white'
-              }`}
-              aria-label={`${t('map_stop')} ${i + 1}: ${p.ciudad || p.titulo}`}
-              title={`${i + 1}. ${p.ciudad || loc(p, 'titulo', lang)}`}
+              style={{ left: `${pct}%`, backgroundColor: passed ? cat.pinBg : '#FFFFFF' }}
+              className="absolute top-1/2 z-20 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-noche"
+              aria-label={`${t('map_stop')} ${n}: ${p.ciudad || p.titulo}`}
+              title={`${n}. ${cat.emoji} ${p.ciudad || loc(p, 'titulo', lang)}`}
             />
           );
         })}

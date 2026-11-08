@@ -8,6 +8,8 @@ import { animate, motion, useMotionValue } from 'framer-motion';
 import { useCollection } from '@/lib/useCollection';
 import { demoPuntos } from '@/lib/demoData';
 import { toMillis } from '@/lib/utils';
+import { CATEGORIAS_PUNTOS, LISTA_CATEGORIAS } from '@/lib/categories';
+import { ordenarPuntos } from '@/lib/orden';
 import { useI18n } from '@/lib/i18n';
 import { buildFullRoadPath } from '@/lib/routing';
 import TimelineSlider from './TimelineSlider';
@@ -17,6 +19,9 @@ import CamperModalViewer from './camper3d/CamperModalViewer';
 import { createHiluxCamperModel } from './camper3d/createCamperModel';
 
 const DAY = 86_400_000;
+
+/** Categoría de un punto (los puntos viejos sin categoría se consideran "importante"). */
+const catDe = (p) => (CATEGORIAS_PUNTOS[p?.categoria] ? p.categoria : 'importante');
 
 // Proveedores de mapas 100% Open Source de la comunidad OpenStreetMap (CERO API Keys)
 const OPEN_SOURCE_MAPS = {
@@ -47,6 +52,14 @@ const OPEN_SOURCE_MAPS = {
     subdomains: 'abc',
     maxZoom: 18,
   },
+};
+
+/** Ícono visible de cada tipo de mapa (el select queda transparente encima). */
+const MAP_STYLE_ICONS = {
+  osm: '🌍',
+  hot: '☀️',
+  topo: '🏔️',
+  cyclosm: '🚲',
 };
 
 /**
@@ -106,7 +119,7 @@ function positionAt(puntos, ts) {
 }
 
 export default function InteractiveMap() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { items, loading } = useCollection('puntos_mapa', 'fechaHora', 'asc');
   const [nowMs] = useState(() => Date.now());
 
@@ -118,7 +131,7 @@ export default function InteractiveMap() {
   const [roadPath, setRoadPath] = useState([]);
   const [roadLoading, setRoadLoading] = useState(false);
 
-  // Puntos ordenados cronológicamente
+  // Puntos en orden cronológico (manda la fecha: así viajan la ruta y el timeline)
   const puntos = useMemo(() => {
     if (loading) return [];
     const src = items.length ? items : demoPuntos;
@@ -127,6 +140,35 @@ export default function InteractiveMap() {
       .filter((p) => Number.isFinite(p.ts) && Number.isFinite(p.lat) && Number.isFinite(p.lng))
       .sort((a, b) => a.ts - b.ts);
   }, [items, loading]);
+
+  // Números de la bitácora (orden efectivo: `orden` si todos lo tienen, si no la fecha)
+  const numeros = useMemo(() => {
+    const m = new Map();
+    ordenarPuntos(puntos).forEach((p, i) => m.set(p.id, i + 1));
+    return m;
+  }, [puntos]);
+
+  // Filtros por categoría (todos activos por defecto)
+  const [activas, setActivas] = useState(() => new Set(LISTA_CATEGORIAS.map((c) => c.id)));
+  const visibles = useMemo(() => puntos.filter((p) => activas.has(catDe(p))), [puntos, activas]);
+  const conteo = useMemo(() => {
+    const m = {};
+    puntos.forEach((p) => {
+      const k = catDe(p);
+      m[k] = (m[k] || 0) + 1;
+    });
+    return m;
+  }, [puntos]);
+
+  const toggleCat = useCallback((id) => {
+    setActivas((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const activarTodas = useCallback(() => setActivas(new Set(LISTA_CATEGORIAS.map((c) => c.id))), []);
 
   // Rango del timeline
   const { start, end } = useMemo(() => {
@@ -140,6 +182,14 @@ export default function InteractiveMap() {
   const [current, setCurrent] = useState({ idx: 0, day: 1, ts: start });
   const [selectedId, setSelectedId] = useState(null);
   const [playing, setPlaying] = useState(false);
+
+  // Velocidad del recorrido animado: 0.5× (lento) … 4× (rápido)
+  const VELOCIDADES = [0.5, 1, 2, 4];
+  const [velocidad, setVelocidad] = useState(1);
+  const velocidadRef = useRef(1);
+  useEffect(() => {
+    velocidadRef.current = velocidad;
+  }, [velocidad]);
 
   const mapEl = useRef(null);
   const mapRef = useRef(null);
@@ -233,7 +283,8 @@ export default function InteractiveMap() {
       const target = Math.min(1, Math.max(0, (p.ts - start) / (end - start)));
       isDrivingRef.current = true;
       animRef.current = animate(progress, target, {
-        duration,
+        // A mayor velocidad, el salto a un punto también es más rápido
+        duration: duration / velocidadRef.current,
         ease: 'easeInOut',
         onComplete: () => {
           isDrivingRef.current = false;
@@ -277,20 +328,6 @@ export default function InteractiveMap() {
     const done = L.polyline([], {
       color: '#FF7A3D', weight: 6, opacity: 0.95, lineCap: 'round', lineJoin: 'round',
     }).addTo(map);
-
-    // Pines de ciudades / hitos
-    const group = L.layerGroup().addTo(map);
-    puntos.forEach((p, i) => {
-      const icon = L.divIcon({
-        className: '',
-        html: `<div class="hito-pin">${i + 1}</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      });
-      L.marker([p.lat, p.lng], { icon, title: p.ciudad || p.titulo })
-        .on('click', () => pickRef.current(p.id, { fly: false }))
-        .addTo(group);
-    });
 
     // Marcador con contenedor para el lienzo Three.js 3D
     const bebiIcon = L.divIcon({
@@ -345,6 +382,9 @@ export default function InteractiveMap() {
       scene.add(fillLight);
 
       const camper = createHiluxCamperModel();
+      // Escala reducida para que La Bebi entre COMPLETA dentro del
+      // contenedor de 130px (al girar, las esquinas no se cortan).
+      camper.root.scale.setScalar(0.6);
       scene.add(camper.root);
 
       slot.innerHTML = '';
@@ -400,11 +440,40 @@ export default function InteractiveMap() {
       threeRef.current = null;
       full.remove();
       done.remove();
-      group.remove();
       bebi.remove();
       layersRef.current = {};
     };
   }, [puntos, roadPath]);
+
+  /* ---------- 2.1) Pines de la bitácora: numerados y coloreados por categoría ---------- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !visibles.length) return undefined;
+
+    const group = L.layerGroup().addTo(map);
+    visibles.forEach((p) => {
+      const cat = CATEGORIAS_PUNTOS[catDe(p)] || CATEGORIAS_PUNTOS.importante;
+      const n = numeros.get(p.id) ?? 0;
+      const sel = p.id === selectedId;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="hito-pin${sel ? ' is-sel' : ''}" style="background:${cat.pinBg};color:${cat.textColor}">${n}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      L.marker([p.lat, p.lng], {
+        icon,
+        title: `${n}. ${cat.emoji} ${p.ciudad || p.titulo || ''}`,
+        zIndexOffset: sel ? 400 : 0,
+      })
+        .on('click', () => pickRef.current(p.id, { fly: false }))
+        .addTo(group);
+    });
+
+    return () => {
+      group.remove();
+    };
+  }, [visibles, numeros, selectedId]);
 
   /* ---------- 3) El timeline mueve a La Bebi siguiendo las curvas de la carretera ---------- */
   const update = useCallback(
@@ -452,6 +521,24 @@ export default function InteractiveMap() {
   }, [progress, update]);
 
   /* ---------- Controles de reproducción ---------- */
+  /** Arranca (o re-arranca desde `from`) el recorrido a la velocidad actual. */
+  const reproducir = useCallback(
+    (from) => {
+      animRef.current?.stop();
+      isDrivingRef.current = true;
+      setPlaying(true);
+      animRef.current = animate(progress, 1, {
+        duration: Math.max(4, (1 - from) * 32) / velocidadRef.current,
+        ease: 'linear',
+        onComplete: () => {
+          setPlaying(false);
+          isDrivingRef.current = false;
+        },
+      });
+    },
+    [progress]
+  );
+
   const togglePlay = () => {
     if (playing) {
       stop();
@@ -462,17 +549,18 @@ export default function InteractiveMap() {
       progress.set(0);
       from = 0;
     }
-    setPlaying(true);
-    isDrivingRef.current = true;
-    animRef.current = animate(progress, 1, {
-      duration: Math.max(4, (1 - from) * 32),
-      ease: 'linear',
-      onComplete: () => {
-        setPlaying(false);
-        isDrivingRef.current = false;
-      },
-    });
+    reproducir(from);
   };
+
+  // Si cambia la velocidad mientras se reproduce, se re-arranca desde
+  // el punto actual (sin salto ni pérdida de lugar).
+  const velPrevRef = useRef(velocidad);
+  useEffect(() => {
+    if (velPrevRef.current === velocidad) return;
+    velPrevRef.current = velocidad;
+    if (playing) reproducir(progress.get());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [velocidad]);
 
   const scrub = (v) => {
     stop();
@@ -485,60 +573,97 @@ export default function InteractiveMap() {
 
   useEffect(() => () => animRef.current?.stop(), []);
 
-  const selected = puntos.find((p) => p.id === selectedId) || null;
+  const selected = useMemo(() => {
+    const p = puntos.find((x) => x.id === selectedId);
+    return p ? { ...p, numero: numeros.get(p.id) ?? null } : null;
+  }, [puntos, numeros, selectedId]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
       <div ref={mapEl} className="absolute inset-0 z-0" />
 
-      {/* Buscador de ciudades */}
-      <div className="absolute left-3 right-3 top-3 z-[1000] sm:left-5 sm:right-auto sm:w-96">
-        <CitySearch puntos={puntos} onSelect={(p) => pick(p.id)} />
-      </div>
+      {/* Panel superior DERECHO: controles, buscador y filtros de la bitácora */}
+      <div className="absolute left-3 right-3 top-3 z-[1000] flex flex-col items-end gap-2 sm:left-auto sm:right-5">
+        {/* Fila de controles: trazado, tipo de mapa (solo ícono) y modo demo */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {/* Indicador de carretera real cargada */}
+          {roadLoading && (
+            <div className="rounded-full border-2 border-noche bg-sol px-2.5 py-1 text-[11px] font-black text-noche shadow-comic-sm animate-pulse">
+              🛣️ Trazando carreteras...
+            </div>
+          )}
 
-      {/* Botonera superior derecha: Mapa Open Source & Visor 3D */}
-      <div className="absolute right-3 top-3 z-[1000] flex flex-wrap items-center justify-end gap-2 sm:right-5">
-        {/* Indicador de carretera real cargada */}
-        {roadLoading && (
-          <div className="rounded-full border-2 border-noche bg-sol px-2.5 py-1 text-[11px] font-black text-noche shadow-comic-sm animate-pulse">
-            🛣️ Trazando carreteras...
-          </div>
-        )}
-
-        {/* Selector de capa Open Source (Sin API Key) */}
-        <div className="flex items-center gap-1.5 rounded-full border-2 border-noche bg-white/95 px-3 py-1 text-xs font-black shadow-comic-sm backdrop-blur-sm">
-          <span>🗺️</span>
-          <select
-            value={mapStyle}
-            onChange={(e) => setMapStyle(e.target.value)}
-            className="cursor-pointer bg-transparent font-display font-extrabold text-noche outline-none"
-            aria-label="Selector de mapa Open Source"
+          {/* Selector de capa Open Source: solo un ícono (el select queda invisible encima) */}
+          <div
+            className="relative grid h-9 w-9 place-items-center rounded-full border-2 border-noche bg-white/95 text-base shadow-comic-sm backdrop-blur-sm"
+            title={OPEN_SOURCE_MAPS[mapStyle]?.name}
           >
-            <option value="osm">🌍 OpenStreetMap Oficial (100% Libre)</option>
-            <option value="hot">☀️ OSM Humanitario (Cálido)</option>
-            <option value="topo">🏔️ OpenTopoMap (Relieve &amp; Andes)</option>
-            <option value="cyclosm">🚲 CyclOSM (Rutas de Aventura)</option>
-          </select>
+            <span aria-hidden>{MAP_STYLE_ICONS[mapStyle] || '🗺️'}</span>
+            <select
+              value={mapStyle}
+              onChange={(e) => setMapStyle(e.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label="Tipo de mapa"
+            >
+              <option value="osm">🌍 OpenStreetMap Oficial (100% Libre)</option>
+              <option value="hot">☀️ OSM Humanitario (Cálido)</option>
+              <option value="topo">🏔️ OpenTopoMap (Relieve &amp; Andes)</option>
+              <option value="cyclosm">🚲 CyclOSM (Rutas de Aventura)</option>
+            </select>
+          </div>
+
+          {isDemo && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-full border-2 border-noche bg-rosa px-3 py-1 text-xs font-extrabold text-white shadow-comic-sm"
+            >
+              🧪 {t('map_demo')}
+            </motion.div>
+          )}
         </div>
 
-        {/* Botón para abrir el Visor 3D Interactivo de La Bebi */}
-        <button
-          type="button"
-          onClick={() => setShow3DModal(true)}
-          className="btn btn-sol text-xs py-1 px-3 shadow-comic-sm hover:scale-105 active:scale-95 transition-transform"
-        >
-          🚐 La Bebi 3D (360°)
-        </button>
+        {/* Buscador de ciudades (derecha) */}
+        <div className="relative z-20 w-full sm:w-96">
+          <CitySearch puntos={puntos} onSelect={(p) => pick(p.id)} />
+        </div>
 
-        {isDemo && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-full border-2 border-noche bg-rosa px-3 py-1 text-xs font-extrabold text-white shadow-comic-sm"
+        {/* Filtros por categoría de la bitácora (derecha) */}
+        <div
+          className="relative z-10 flex w-full flex-wrap justify-end gap-1.5 sm:w-96"
+          role="group"
+          aria-label={t('map_filters')}
+        >
+          <button
+            type="button"
+            onClick={activarTodas}
+            className={`rounded-full border-2 border-noche px-3 py-1 text-xs font-extrabold shadow-comic-sm backdrop-blur-sm transition ${
+              activas.size === LISTA_CATEGORIAS.length ? 'bg-white/95 text-noche' : 'bg-sol text-noche'
+            }`}
           >
-            🧪 {t('map_demo')}
-          </motion.div>
-        )}
+            🧭 {t('map_all')}
+          </button>
+          {LISTA_CATEGORIAS.map((c) => {
+            const on = activas.has(c.id);
+            const n = conteo[c.id] || 0;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => toggleCat(c.id)}
+                aria-pressed={on}
+                title={`${lang === 'en' ? c.nombre_en : c.nombre} — ${c.desc}`}
+                className={`rounded-full border-2 border-noche px-3 py-1 text-xs font-extrabold shadow-comic-sm backdrop-blur-sm transition ${
+                  on ? '' : 'bg-white/70 text-noche/45'
+                }`}
+                style={on ? { backgroundColor: c.pinBg, color: c.textColor } : undefined}
+              >
+                {c.emoji} {lang === 'en' ? c.corto_en : c.corto}
+                {n > 0 ? ` (${n})` : ''}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {loading && (
@@ -552,6 +677,11 @@ export default function InteractiveMap() {
         <TimelineSlider
           progress={progress}
           puntos={puntos}
+          visibles={visibles}
+          numeros={numeros}
+          velocidad={velocidad}
+          velocidades={VELOCIDADES}
+          onVelocidad={setVelocidad}
           start={start}
           end={end}
           current={current}

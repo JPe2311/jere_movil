@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { CATEGORIAS_PUNTOS } from '@/lib/categories';
 import { useI18n } from '@/lib/i18n';
 import { loc } from '@/lib/utils';
 
@@ -78,7 +79,9 @@ export default function CitySearch({ puntos, onSelect }) {
                   onClick={() => choose(p)}
                   className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm font-bold hover:bg-sol/40"
                 >
-                  <span aria-hidden>📍</span>
+                  <span aria-hidden>
+                    {(CATEGORIAS_PUNTOS[p.categoria] || CATEGORIAS_PUNTOS.importante).emoji}
+                  </span>
                   <span className="min-w-0 flex-1 truncate">
                     {p.ciudad || loc(p, 'titulo', lang)}
                     {p.pais ? <span className="font-semibold text-noche/60">, {p.pais}</span> : null}

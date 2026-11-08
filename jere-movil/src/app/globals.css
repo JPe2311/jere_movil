@@ -83,6 +83,11 @@
 .hito-pin:hover {
   transform: scale(1.25) rotate(-6deg);
 }
+.hito-pin.is-sel {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px #ff7a3d, 2px 2px 0 #1f2a44;
+  z-index: 5;
+}
 
 .bebi-marker {
   width: 110px;
