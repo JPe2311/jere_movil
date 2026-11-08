@@ -1,8 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
-import { useAuth, useMemo } from '@/components/AuthProvider';
+import { useEffect, useMemo } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 
 export default function VideosPage() {

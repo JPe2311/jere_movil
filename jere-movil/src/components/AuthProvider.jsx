@@ -129,7 +129,7 @@ export function AuthProvider({ children }) {
       logout,
       error,
     }),
-    [user, role, loading, configured, termsAccepted, youtubeSubscribed, instagramSubscribed, login, logout]
+    [user, role, loading, isClientConfigured, termsAccepted, youtubeSubscribed, instagramSubscribed, login, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
