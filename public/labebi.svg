@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 140" width="220" height="140" role="img" aria-label="La Bebi - Toyota Hilux Camper 3D">
+  <title>La Bebi - Toyota Hilux Camper 3D</title>
+  <defs>
+    <!-- Sombra proyectada en el piso -->
+    <radialGradient id="groundShadow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#1F2A44" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#1F2A44" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Carrocería cabina Hilux (blanco puro con sombreado) -->
+    <linearGradient id="hiluxCab" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E2E8F0"/>
+    </linearGradient>
+
+    <!-- Módulo vivienda camper (crema suave con sombreado 3D) -->
+    <linearGradient id="camperBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFDF7"/>
+      <stop offset="1" stop-color="#F2ECDD"/>
+    </linearGradient>
+
+    <linearGradient id="camperRoof" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#FBF8EE"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+
+    <!-- Faldón y paragolpes negro mate -->
+    <linearGradient id="blackSkirtGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#334155"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+
+    <!-- Vidrios polarizados con reflejo -->
+    <linearGradient id="tintedGlass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3B82F6" stop-opacity=".7"/>
+      <stop offset=".4" stop-color="#1E3A8A" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+
+    <!-- Faros -->
+    <radialGradient id="headlightGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#FEF08A"/>
+      <stop offset="1" stop-color="#EAB308"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Sombra bajo la furgoneta -->
+  <ellipse cx="110" cy="126" rx="98" ry="10" fill="url(#groundShadow)"/>
+
+  <!-- Ruedas del lado lejano (profundidad 3D) -->
+  <circle cx="56" cy="106" r="14" fill="#0F172A"/>
+  <circle cx="164" cy="106" r="14" fill="#0F172A"/>
+
+  <!-- ============================================== -->
+  <!-- MÓDULO HABITABLE CAMPER CON ALCOBA SOBRE CABINA -->
+  <!-- ============================================== -->
+
+  <!-- Techo y baca del camper -->
+  <path d="M 18 36 L 40 22 L 140 22 L 130 36 Z" fill="url(#camperRoof)" stroke="#1F2A44" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Barandilla / Baca negra superior -->
+  <path d="M 38 20 L 142 20" stroke="#0F172A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="55" y1="20" x2="55" y2="24" stroke="#0F172A" stroke-width="2"/>
+  <line x1="90" y1="20" x2="90" y2="24" stroke="#0F172A" stroke-width="2"/>
+  <line x1="125" y1="20" x2="125" y2="24" stroke="#0F172A" stroke-width="2"/>
+
+  <!-- Cuerpo principal del módulo camper -->
+  <path d="M 16 36 Q 16 34 20 34 L 126 34 L 168 34 Q 172 34 170 38 L 160 62 L 130 64 L 130 96 L 16 96 Z" fill="url(#camperBody)" stroke="#1F2A44" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- ALCOBA / CAPUCHINA (Extensión sobre el techo de la Hilux) -->
+  <!-- Cara frontal inclinada de la alcoba -->
+  <path d="M 130 36 L 140 22 L 176 24 L 168 34 Z" fill="url(#camperRoof)" stroke="#1F2A44" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Ventanita de la alcoba -->
+  <rect x="136" y="40" width="22" height="15" rx="3" fill="url(#tintedGlass)" stroke="#1F2A44" stroke-width="2"/>
+
+  <!-- ============================================== -->
+  <!-- GRÁFICA ARTÍSTICA DE MONTAÑAS EN PINCELADAS    -->
+  <!-- (Azul Marino, Cyan, Denim, Blanco - Como la real) -->
+  <!-- ============================================== -->
+  <g id="mountainBrushStrokes">
+    <!-- Pinceladas azul oscuro base -->
+    <path d="M 22 84 L 48 38 L 62 84 Z" fill="#1E3A8A" opacity=".95"/>
+    <path d="M 52 86 L 78 44 L 92 86 Z" fill="#1E3A8A" opacity=".95"/>
+    <path d="M 80 88 L 102 52 L 118 88 Z" fill="#1E3A8A" opacity=".95"/>
+
+    <!-- Trazos de pincel denim y cyan superpuestos -->
+    <path d="M 28 82 L 48 42 L 58 76 Z" fill="#2563EB" opacity=".9"/>
+    <path d="M 58 84 L 78 48 L 86 80 Z" fill="#38BDF8" opacity=".85"/>
+    <path d="M 86 86 L 102 56 L 112 82 Z" fill="#60A5FA" opacity=".85"/>
+
+    <!-- Pinceladas blancas en las cumbres (nieve y brillo) -->
+    <polygon points="48,38 43,50 49,47 54,54" fill="#FFFFFF"/>
+    <polygon points="78,44 73,54 79,51 84,58" fill="#FFFFFF"/>
+    <polygon points="102,52 98,60 103,58 107,64" fill="#FFFFFF"/>
+
+    <!-- Pincelada pequeña en la alcoba delantera -->
+    <path d="M 148 58 L 162 46 L 166 60 Z" fill="#1E3A8A"/>
+    <path d="M 152 57 L 162 49 L 164 58 Z" fill="#38BDF8"/>
+  </g>
+
+  <!-- Ventana lateral grande del camper (con marco negro) -->
+  <rect x="30" y="44" width="34" height="24" rx="4" fill="url(#tintedGlass)" stroke="#0F172A" stroke-width="2.5"/>
+  <line x1="32" y1="48" x2="62" y2="48" stroke="#FFFFFF" stroke-width="1.5" opacity=".6"/>
+
+  <!-- Puerta de acceso lateral (blanca con ventana) -->
+  <rect x="74" y="40" width="26" height="54" rx="4" fill="#FFFFFF" stroke="#0F172A" stroke-width="2.5"/>
+  <rect x="79" y="46" width="16" height="18" rx="3" fill="url(#tintedGlass)" stroke="#0F172A" stroke-width="1.8"/>
+  <circle cx="78" cy="74" r="2.2" fill="#0F172A"/>
+
+  <!-- Faldón inferior y cajones portaobjetos negros -->
+  <path d="M 16 94 H 128 V 104 H 16 Z" fill="url(#blackSkirtGrad)" stroke="#1F2A44" stroke-width="2"/>
+  <rect x="22" y="96" width="22" height="6" rx="1.5" fill="#1E293B"/>
+  <rect x="78" y="96" width="26" height="6" rx="1.5" fill="#1E293B"/>
+
+  <!-- ============================================== -->
+  <!-- CABINA TOYOTA HILUX (BLANCA)                   -->
+  <!-- ============================================== -->
+
+  <!-- Cabina y parabrisas -->
+  <path d="M 126 62 L 142 62 Q 146 62 149 66 L 168 84 L 194 88 Q 198 88.5 198 94 L 198 104 L 126 104 Z" fill="url(#hiluxCab)" stroke="#1F2A44" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- Capó (trompa Hilux) -->
+  <path d="M 168 84 L 196 88 L 198 96 L 166 94 Z" fill="url(#hiluxCab)"/>
+
+  <!-- Parabrisas Hilux con inclinación -->
+  <path d="M 132 66 L 144 66 Q 146 66 148 68 L 162 82 L 132 82 Z" fill="url(#tintedGlass)" stroke="#1F2A44" stroke-width="2.2" stroke-linejoin="round"/>
+  <!-- Brillo del cristal -->
+  <line x1="138" y1="78" x2="148" y2="68" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+
+  <!-- Manija de puerta negra -->
+  <rect x="134" y="88" width="9" height="3" rx="1.5" fill="#0F172A"/>
+
+  <!-- Espejo retrovisor negro Hilux -->
+  <path d="M 162 80 L 168 80 L 167 85 L 161 84 Z" fill="#0F172A"/>
+
+  <!-- Faro delantero Hilux y parrilla -->
+  <path d="M 194 89 L 202 91 L 200 97 L 192 95 Z" fill="url(#headlightGlow)" stroke="#1F2A44" stroke-width="1.8"/>
+  <!-- Paragolpes delantero Hilux -->
+  <path d="M 190 98 H 204 Q 206 98 206 103 V 105 Q 206 108 201 108 H 190 Z" fill="url(#blackSkirtGrad)" stroke="#1F2A44" stroke-width="2.2"/>
+
+  <!-- Logotipo sutil "HILUX" -->
+  <text x="174" y="92" font-family="Arial, sans-serif" font-size="3.5" font-weight="900" fill="#64748B" letter-spacing="0.5">HILUX</text>
+
+  <!-- ============================================== -->
+  <!-- RUEDAS OFF-ROAD (Cercanas)                    -->
+  <!-- ============================================== -->
+  <!-- Rueda trasera -->
+  <g transform="translate(48, 108)">
+    <circle cx="0" cy="0" r="18" fill="#0F172A" stroke="#1E293B" stroke-width="2"/>
+    <circle cx="0" cy="0" r="11" fill="#CBD5E1" stroke="#475569" stroke-width="1.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#0F172A"/>
+    <!-- Detalles de tuercas -->
+    <circle cx="-6" cy="0" r="1.2" fill="#475569"/>
+    <circle cx="6" cy="0" r="1.2" fill="#475569"/>
+    <circle cx="0" cy="-6" r="1.2" fill="#475569"/>
+    <circle cx="0" cy="6" r="1.2" fill="#475569"/>
+  </g>
+
+  <!-- Rueda delantera -->
+  <g transform="translate(156, 108)">
+    <circle cx="0" cy="0" r="18" fill="#0F172A" stroke="#1E293B" stroke-width="2"/>
+    <circle cx="0" cy="0" r="11" fill="#CBD5E1" stroke="#475569" stroke-width="1.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#0F172A"/>
+    <circle cx="-6" cy="0" r="1.2" fill="#475569"/>
+    <circle cx="6" cy="0" r="1.2" fill="#475569"/>
+    <circle cx="0" cy="-6" r="1.2" fill="#475569"/>
+    <circle cx="0" cy="6" r="1.2" fill="#475569"/>
+  </g>
+</svg>
