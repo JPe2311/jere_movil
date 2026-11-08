@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-crema font-body text-noche antialiased;
+    background-image: radial-gradient(#ffe2b0 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .card-comic {
+    @apply rounded-3xl border-[3px] border-noche bg-white shadow-comic;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-[3px] border-noche px-5 py-2 font-display font-bold shadow-comic transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-sol {
+    @apply btn bg-sol hover:bg-yellow-300;
+  }
+  .btn-cielo {
+    @apply btn bg-cielo text-white hover:brightness-110;
+  }
+  .btn-rosa {
+    @apply btn bg-rosa text-white hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply btn bg-white hover:bg-crema;
+  }
+  .input {
+    @apply w-full rounded-2xl border-[3px] border-noche bg-white px-4 py-2 font-semibold outline-none focus:ring-4 focus:ring-sol/60;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full border-2 border-noche bg-sol px-3 py-0.5 text-xs font-extrabold;
+  }
+  .page-title {
+    @apply font-display text-4xl font-extrabold sm:text-5xl;
+  }
+  .washi-tape-yellow {
+    @apply bg-sol/90 border-x-2 border-dashed border-noche shadow-sm;
+  }
+  .tire-treads {
+    background: repeating-linear-gradient(
+      -45deg,
+      #1F2A44,
+      #1F2A44 6px,
+      #FF7A3D 6px,
+      #FF7A3D 12px
+    );
+  }
+}
+
+/* ---------- Leaflet / mapa ---------- */
+.leaflet-container {
+  font-family: inherit;
+  background: #cfe8ff;
+}
+
+.hito-pin {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #ffc93c;
+  border: 3px solid #1f2a44;
+  display: grid;
+  place-items: center;
+  font: 800 12px 'Baloo 2', sans-serif;
+  color: #1f2a44;
+  box-shadow: 2px 2px 0 #1f2a44;
+  transition: transform 0.15s ease;
+}
+.hito-pin:hover {
+  transform: scale(1.25) rotate(-6deg);
+}
+
+.bebi-marker {
+  width: 110px;
+  height: 70px;
+  cursor: pointer;
+  filter: drop-shadow(0 8px 6px rgba(31, 42, 68, 0.4));
+  perspective: 800px;
+}
+.bebi-3d-camper {
+  width: 110px;
+  height: 70px;
+  transform-origin: 55px 35px;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.bebi-3d-camper img {
+  display: block;
+  width: 110px;
+  height: auto;
+  animation: bounceSoft 1.4s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+.bebi-marker:hover .bebi-3d-camper img {
+  transform: scale(1.1);
+}
+
+/* ---------- Slider de la línea de tiempo ---------- */
+.timeline-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+  height: 32px;
+  cursor: grab;
+  margin: 0;
+}
+.timeline-range:active {
+  cursor: grabbing;
+}
+.timeline-range::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 12px;
+}
+.timeline-range::-moz-range-track {
+  background: transparent;
+  height: 12px;
+}
+.timeline-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  margin-top: -8px;
+  border-radius: 9999px;
+  background: #ffc93c;
+  border: 3px solid #1f2a44;
+  box-shadow: 2px 2px 0 #1f2a44;
+}
+.timeline-range::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #ffc93c;
+  border: 3px solid #1f2a44;
+  box-shadow: 2px 2px 0 #1f2a44;
+}
