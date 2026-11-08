@@ -886,6 +886,78 @@ export default function InteractiveMap() {
         />
       )}
 
+      {/* Selector de puntos encimados */}
+      {elegir && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="fixed z-[2100] flex items-center justify-center bg-noche/70 p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="card-comic p-5 max-w-sm w-full border-[3px] border-noche shadow-2xl"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-xl font-extrabold text-noche">
+                Elegí punto
+              </h3>
+              <button
+                type="button"
+                onClick={() => setElegir(null)}
+                className="rounded-full border-2 border-noche bg-white px-2 py-1 text-xs font-bold text-noche"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-sm font-bold text-noche/60 mb-4">
+              {elegir.puntos.length} punto{elegir.puntos.length !== 1 ? 's' : ''} en este lugar
+            </p>
+            <div className="space-y-2">
+              {elegir.puntos.map((p) => {
+                const cat = CATEGORIAS_PUNTOS[p.categoria] || CATEGORIAS_PUNTOS.importante;
+                const n = numeros.get(p.id) ?? 0;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      pickRef.current(p.id, { fly: false });
+                      setElegir(null);
+                    }}
+                    className="flex items-center gap-3 rounded-xl border-2 border-noche bg-white px-3 py-2 text-sm font-bold text-noche hover:bg-crema transition"
+                  >
+                    <span
+                      className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-noche bg-white text-xs font-extrabold"
+                      style={{
+                        backgroundColor: cat.pinBg,
+                        color: cat.textColor,
+                      }}
+                    >
+                      {n}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate font-extrabold text-sm">
+                        {p.titulo || p.ciudad || 'Sin nombre'}
+                      </div>
+                      <div className="text-xs text-noche/60 truncate">
+                        {p.ciudad || ''}
+                        {p.pais ? `, ${p.pais}` : ''}
+                      </div>
+                    </div>
+                    <span className={`h-6 w-6 rounded-full border-2 border-noche flex items-center justify-center text-xs font-extrabold ${sel?.id === p.id ? 'bg-sol text-white' : 'bg-white text-noche'}`}>
+                      {n}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Modal de Hito / Parada */}
       <MilestoneModal punto={selected} onClose={() => setSelectedId(null)} />
 
