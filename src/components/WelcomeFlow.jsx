@@ -106,7 +106,7 @@ export default function WelcomeFlow() {
           </motion.div>
         )}
 
-        {/* Paso 2: YouTube */}
+        {/* Paso 2: YouTube - Botón oficial de suscripción */}
         {step === 2 && (
           <motion.div
             key="step2"
@@ -120,20 +120,23 @@ export default function WelcomeFlow() {
               Suscribite a YouTube
             </h2>
             <p className="text-sm text-noche/70 leading-relaxed text-center mb-6">
-              Seguinos en <span className="font-bold text-rosa">@JereMovil</span> para ver los
-              capítulos completos del viaje.
+              Hacé clic en el botón de YouTube para suscribirte al canal{' '}
+              <span className="font-bold text-rosa">@JereMovil</span>.
             </p>
 
+            {/* Botón oficial de suscripción de YouTube */}
             <div className="flex flex-col items-center gap-3">
-              <a
-                href="https://www.youtube.com/@JereMovil"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-3 rounded-full border-2 border-noche bg-rosa text-white font-bold shadow-comic-sm hover:bg-rosa/90 transition-transform active:scale-95"
-              >
-                <span className="text-2xl" aria-hidden>▶️</span>
-                <span>Suscribirse a YouTube</span>
-              </a>
+              <iframe
+                src="https://www.youtube.com/subscribe_widget?channel=JereMovil"
+                style={{ border: 'none' }}
+                height="68"
+                width="234"
+                title="Suscribirse a JereMovil en YouTube"
+                className="rounded-full shadow-comic-sm"
+              />
+              <p className="text-xs text-noche/60 text-center">
+                Una vez suscrito, marcá la casilla abajo
+              </p>
             </div>
 
             <div className="mt-4 flex items-center gap-2">
@@ -145,7 +148,7 @@ export default function WelcomeFlow() {
                 className="w-5 h-5 rounded border-2 border-noche accent-sol"
               />
               <label htmlFor="youtube" className="text-sm font-bold text-noche cursor-pointer select-none">
-                Ya me suscribí
+                Ya me suscribí al canal de YouTube
               </label>
             </div>
 
@@ -171,7 +174,7 @@ export default function WelcomeFlow() {
           </motion.div>
         )}
 
-        {/* Paso 3: Instagram */}
+        {/* Paso 3: Instagram - Botón oficial */}
         {step === 3 && (
           <motion.div
             key="step3"
@@ -185,10 +188,11 @@ export default function WelcomeFlow() {
               Seguinos en Instagram
             </h2>
             <p className="text-sm text-noche/70 leading-relaxed text-center mb-6">
-              Seguinos en <span className="font-bold text-rosa">@jerefijo</span> para ver fotos y
-              stories del camino.
+              Hacé clic en el botón de Instagram para ir al perfil y{' '}
+              <span className="font-bold text-rosa">seguinos</span>.
             </p>
 
+            {/* Botón oficial de Instagram */}
             <div className="flex flex-col items-center gap-3">
               <a
                 href="https://www.instagram.com/jerefijo/"
@@ -199,6 +203,9 @@ export default function WelcomeFlow() {
                 <span className="text-2xl" aria-hidden>📸</span>
                 <span>Seguir en Instagram</span>
               </a>
+              <p className="text-xs text-noche/60 text-center">
+                Al entrar al perfil, hacé clic en «Seguir»
+              </p>
             </div>
 
             <div className="mt-4 flex items-center gap-2">
@@ -210,7 +217,7 @@ export default function WelcomeFlow() {
                 className="w-5 h-5 rounded border-2 border-noche accent-sol"
               />
               <label htmlFor="instagram" className="text-sm font-bold text-noche cursor-pointer select-none">
-                Ya te seguimos
+                Ya seguimos a @jerefijo en Instagram
               </label>
             </div>
 
@@ -252,7 +259,6 @@ export default function WelcomeFlow() {
             <button
               type="button"
               onClick={() => {
-                // Forzar re-render para salir del LoginWall
                 window.location.reload();
               }}
               className="px-8 py-3 rounded-full border-2 border-noche bg-sol text-white font-bold shadow-comic-sm hover:bg-sol/90"
