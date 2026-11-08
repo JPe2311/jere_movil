@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JERE MÓVIL DESIGN SYSTEM 🚐 • GUÍA DE ESTILO CÓMIC &amp; AVENTURA</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&amp;family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            // Paleta oficial Comic Neobrutalism
+            sol: {
+              DEFAULT: '#FFC93C',
+              dark: '#E5B129'
+            },
+            atardecer: {
+              DEFAULT: '#FF7A3D',
+              dark: '#E06328'
+            },
+            cielo: {
+              DEFAULT: '#2D9CDB',
+              dark: '#1C80BA'
+            },
+            tinta: {
+              DEFAULT: '#1F2A44',
+              soft: '#2D3A58'
+            },
+            crema: {
+              DEFAULT: '#FFF6E5',
+              dark: '#F4E9D0'
+            },
+            rosa: {
+              DEFAULT: '#FF5D8F',
+              dark: '#E64477'
+            },
+            monte: {
+              DEFAULT: '#2F9E6B',
+              dark: '#248356'
+            }
+          },
+          borderRadius: {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Rubik", "sans-serif"],
+            display: ["Rubik", "sans-serif"],
+            body: ["Public Sans", "sans-serif"],
+            label: ["Public Sans", "sans-serif"]
+          },
+          boxShadow: {
+            'comic-sm': '2px 2px 0px 0px #1F2A44',
+            'comic': '4px 4px 0px 0px #1F2A44',
+            'comic-lg': '6px 6px 0px 0px #1F2A44',
+            'comic-xl': '8px 8px 0px 0px #1F2A44'
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    /* Paper Halftone Dot Pattern Background */
+    .bg-halftone {
+      background-color: #FFF6E5;
+      background-image: radial-gradient(#1F2A44 1.1px, transparent 1.1px);
+      background-size: 24px 24px;
+      background-position: 0 0;
+    }
+    
+    .bg-halftone-dense {
+      background-color: #FFF6E5;
+      background-image: radial-gradient(#1F2A44 0.9px, transparent 0.9px);
+      background-size: 16px 16px;
+    }
+
+    /* Comic speech bubble tail */
+    .comic-tail-bottom::after {
+      content: '';
+      position: absolute;
+      bottom: -16px;
+      left: 36px;
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 18px solid #1F2A44;
+    }
+    .comic-tail-bottom::before {
+      content: '';
+      position: absolute;
+      bottom: -11px;
+      left: 39px;
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 14px solid #ffffff;
+      z-index: 10;
+    }
+
+    /* Washi Tape strip */
+    .washi-tape {
+      background: rgba(255, 201, 60, 0.85);
+      backdrop-filter: blur(1px);
+      box-shadow: 0 1px 3px rgba(31, 42, 68, 0.2);
+    }
+
+    /* Ruled paper lines */
+    .lined-paper {
+      background-size: 100% 28px;
+      background-image: linear-gradient(to bottom, transparent 27px, #e5dcc5 28px);
+      line-height: 28px;
+    }
+  </style>
+</head>
+<body class="bg-halftone text-[#1F2A44] font-body selection:bg-sol selection:text-tinta min-h-screen flex flex-col antialiased">
+<!-- ================= TOP APP BAR (Shared Components JSON) ================= -->
+<header class="docked full-width top-0 z-50 bg-white/95 dark:bg-neutral-900/95 border-b-4 border-neutral-900 dark:border-neutral-800 shadow-[0_4px_0px_0px_rgba(31,42,68,1)] sticky">
+<div class="flex justify-between items-center w-full px-4 md:px-8 py-3 max-w-7xl mx-auto">
+<!-- Brand Logo -->
+<a class="font-headline text-2xl font-black tracking-tight text-neutral-900 dark:text-neutral-50 drop-shadow-sm flex items-center gap-2 group" href="#">
+<span>JERE MÓVIL 🚐</span>
+<span class="inline-block px-2 py-0.5 text-xs font-black bg-sol text-tinta border-2 border-tinta rounded-full shadow-[2px_2px_0px_0px_rgba(31,42,68,1)] group-hover:rotate-6 transition-transform">UI KIT</span>
+</a>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="#mapa">Mapa</a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="#bitacora">Bitácora</a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="#labebi">La Bebi</a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="#fotos">Fotos</a>
+<span class="border-b-4 border-neutral-900 dark:border-neutral-100 text-neutral-900 dark:text-neutral-100 font-black pb-1 cursor-default">Design System</span>
+</nav>
+<!-- Trailing Controls & Search -->
+<div class="flex items-center gap-3">
+<!-- Lang toggle -->
+<button class="hidden sm:inline-flex items-center justify-center px-3 py-1.5 text-xs font-black border-2 border-tinta rounded-xl bg-white text-tinta shadow-comic-sm hover:-translate-y-0.5 hover:shadow-comic transition-all active:translate-y-0.5 active:shadow-none">
+          ES / EN
+        </button>
+<!-- Trailing Primary Action -->
+<a class="inline-flex items-center gap-2 px-4 py-2 text-sm font-black border-2 border-tinta rounded-xl bg-sol text-tinta shadow-comic hover:-translate-y-0.5 hover:shadow-comic-lg transition-all active:translate-y-0.5 active:shadow-comic-sm" href="#map-assets">
+<span class="material-symbols-outlined text-lg" data-icon="explore">explore</span>
+<span class="hidden sm:inline">Ruta Actual</span>
+</a>
+<!-- Mobile Menu Icon -->
+<button class="md:hidden flex items-center justify-center p-2 border-2 border-tinta rounded-xl bg-white text-tinta shadow-comic-sm active:translate-y-0.5">
+<span class="material-symbols-outlined text-xl" data-icon="menu">menu</span>
+</button>
+</div>
+</div>
+</header>
+<!-- ================= MAIN SHOWCASE CANVAS ================= -->
+<main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8 py-8 space-y-16">
+<!-- 1. HERO BANNER & SUB-HEADER -->
+<section class="relative bg-white border-4 border-tinta rounded-3xl p-6 sm:p-10 shadow-comic-lg overflow-hidden">
+<!-- Background sticker doodles -->
+<div class="absolute -right-8 -top-8 w-44 h-44 rounded-full bg-sol/20 border-4 border-dashed border-tinta/30 pointer-events-none rotate-12"></div>
+<div class="absolute right-24 -bottom-6 w-28 h-28 rounded-2xl bg-rosa/20 border-2 border-dashed border-tinta/30 pointer-events-none -rotate-6"></div>
+<div class="relative z-10 space-y-6">
+<!-- Badges row -->
+<div class="flex flex-wrap items-center gap-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-rosa text-white font-headline text-xs font-black border-2 border-tinta rounded-full shadow-comic-sm -rotate-2">
+<span class="material-symbols-outlined text-sm" data-icon="auto_awesome">auto_awesome</span>
+            v2.4 Comic Edition
+          </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-crema-dark text-tinta font-label text-xs font-bold border-2 border-tinta rounded-full shadow-comic-sm rotate-1">
+<span class="material-symbols-outlined text-sm" data-icon="route">route</span>
+            La Bebi Camper Kit
+          </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-monte text-white font-label text-xs font-extrabold border-2 border-tinta rounded-full shadow-comic-sm">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+            100% Neo-Brutalist Ready
+          </span>
+</div>
+<!-- Headline -->
+<div class="space-y-3">
+<h1 class="font-headline font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-tinta tracking-tight leading-tight uppercase">
+            JERE MÓVIL DESIGN SYSTEM 🚐 <br class="hidden sm:inline"/>
+<span class="text-atardecer underline decoration-wavy decoration-sol">GUÍA DE ESTILO CÓMIC</span> &amp; AVENTURA
+          </h1>
+<p class="font-body text-base sm:text-lg text-tinta-soft max-w-3xl font-medium leading-relaxed">
+            Biblioteca de componentes interactivos y sistema editorial para narrar la odisea de Jere y su furgoneta <span class="font-bold text-tinta">"La Bebi"</span> por toda Sudamérica. Tinta viva, sombras duras, stickers coleccionables y estética de historieta clásica de ruta.
+          </p>
+</div>
+<!-- Quick Jump Bar & Export actions -->
+<div class="pt-4 border-t-2 border-dashed border-tinta/30 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+<div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+<span class="text-tinta uppercase tracking-wider font-black mr-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-base" data-icon="bookmark">bookmark</span> Secciones:
+            </span>
+<a class="px-2.5 py-1 bg-crema border-2 border-tinta rounded-lg shadow-comic-sm hover:bg-sol transition-colors" href="#colores">Colores</a>
+<a class="px-2.5 py-1 bg-crema border-2 border-tinta rounded-lg shadow-comic-sm hover:bg-sol transition-colors" href="#tipografia">Tipografía</a>
+<a class="px-2.5 py-1 bg-crema border-2 border-tinta rounded-lg shadow-comic-sm hover:bg-sol transition-colors" href="#botones">Botones</a>
+<a class="px-2.5 py-1 bg-crema border-2 border-tinta rounded-lg shadow-comic-sm hover:bg-sol transition-colors" href="#stickers">Stickers &amp; Pines</a>
+<a class="px-2.5 py-1 bg-crema border-2 border-tinta rounded-lg shadow-comic-sm hover:bg-sol transition-colors" href="#scrapbook">Polaroid &amp; Diarios</a>
+<a class="px-2.5 py-1 bg-crema border-2 border-tinta rounded-lg shadow-comic-sm hover:bg-sol transition-colors" href="#map-assets">Mapa Comic</a>
+<a class="px-2.5 py-1 bg-crema border-2 border-tinta rounded-lg shadow-comic-sm hover:bg-sol transition-colors" href="#forms">Controles</a>
+</div>
+<!-- Buttons -->
+<div class="flex items-center gap-3">
+<button class="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-black border-2 border-tinta rounded-xl bg-sol text-tinta shadow-comic hover:-translate-y-0.5 hover:shadow-comic-lg transition-all active:translate-y-0.5 active:shadow-none">
+<span class="material-symbols-outlined text-base" data-icon="download">download</span>
+              Exportar Tokens JSON
+            </button>
+<button class="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-black border-2 border-tinta rounded-xl bg-white text-tinta shadow-comic hover:-translate-y-0.5 hover:shadow-comic-lg transition-all active:translate-y-0.5 active:shadow-none">
+<span class="material-symbols-outlined text-base" data-icon="palette">palette</span>
+              Figma Kit
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. COLOR TOKENS PALETTE -->
+<section class="space-y-6" id="colores">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-4 border-tinta pb-3">
+<div>
+<div class="inline-block px-3 py-0.5 text-xs font-black bg-sol border-2 border-tinta rounded-md shadow-comic-sm mb-1 uppercase">
+            Tokens de Marca
+          </div>
+<h2 class="font-headline font-black text-2xl sm:text-3xl text-tinta tracking-tight uppercase flex items-center gap-2">
+<span>01. Paleta Cromática Cómic</span>
+<span class="text-sm font-normal text-tinta-soft font-body">(7 Swatches de Identidad)</span>
+</h2>
+</div>
+<p class="font-body text-sm font-bold text-tinta-soft">Fórmulas hex, contraste duro y semántica de ruta</p>
+</div>
+<!-- Swatches Bento Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Sol Dorado -->
+<div class="bg-white border-3 border-tinta rounded-2xl p-4 shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all flex flex-col justify-between">
+<div>
+<div class="h-28 rounded-xl bg-sol border-2 border-tinta shadow-comic-sm flex items-end p-3 justify-between">
+<span class="font-headline font-black text-lg text-tinta px-2 py-0.5 bg-white/90 rounded-md border border-tinta">#FFC93C</span>
+<span class="material-symbols-outlined text-2xl text-tinta" data-icon="wb_sunny">wb_sunny</span>
+</div>
+<div class="mt-3">
+<h3 class="font-headline font-black text-lg text-tinta leading-none">Sol Dorado</h3>
+<p class="text-xs font-mono font-bold text-neutral-500 mt-1">var(--color-sol)</p>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t-2 border-dashed border-neutral-200">
+<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase bg-sol/20 text-tinta rounded border border-tinta">Primario &amp; Energía</span>
+<p class="text-xs text-neutral-600 mt-1 font-medium">Llamados de acción cruciales, medallas de ruta y soles de mediodía.</p>
+</div>
+</div>
+<!-- Atardecer Rodante -->
+<div class="bg-white border-3 border-tinta rounded-2xl p-4 shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all flex flex-col justify-between">
+<div>
+<div class="h-28 rounded-xl bg-atardecer border-2 border-tinta shadow-comic-sm flex items-end p-3 justify-between">
+<span class="font-headline font-black text-lg text-white px-2 py-0.5 bg-tinta rounded-md border border-white">#FF7A3D</span>
+<span class="material-symbols-outlined text-2xl text-white" data-icon="local_fire_department">local_fire_department</span>
+</div>
+<div class="mt-3">
+<h3 class="font-headline font-black text-lg text-tinta leading-none">Atardecer Rodante</h3>
+<p class="text-xs font-mono font-bold text-neutral-500 mt-1">var(--color-atardecer)</p>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t-2 border-dashed border-neutral-200">
+<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase bg-atardecer/20 text-atardecer-dark rounded border border-atardecer">Secundario de Acción</span>
+<p class="text-xs text-neutral-600 mt-1 font-medium">Trazado activo de carretera, hitos logrados y alertas de aventura.</p>
+</div>
+</div>
+<!-- Cielo Abierto -->
+<div class="bg-white border-3 border-tinta rounded-2xl p-4 shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all flex flex-col justify-between">
+<div>
+<div class="h-28 rounded-xl bg-cielo border-2 border-tinta shadow-comic-sm flex items-end p-3 justify-between">
+<span class="font-headline font-black text-lg text-white px-2 py-0.5 bg-tinta rounded-md border border-white">#2D9CDB</span>
+<span class="material-symbols-outlined text-2xl text-white" data-icon="cloud">cloud</span>
+</div>
+<div class="mt-3">
+<h3 class="font-headline font-black text-lg text-tinta leading-none">Cielo Abierto</h3>
+<p class="text-xs font-mono font-bold text-neutral-500 mt-1">var(--color-cielo)</p>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t-2 border-dashed border-neutral-200">
+<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase bg-cielo/20 text-cielo-dark rounded border border-cielo">Info &amp; Agua</span>
+<p class="text-xs text-neutral-600 mt-1 font-medium">Lagos, océano Pacífico, filtros de búsqueda y tarjetas climáticas.</p>
+</div>
+</div>
+<!-- Noche Tinta -->
+<div class="bg-white border-3 border-tinta rounded-2xl p-4 shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all flex flex-col justify-between">
+<div>
+<div class="h-28 rounded-xl bg-tinta border-2 border-tinta shadow-comic-sm flex items-end p-3 justify-between">
+<span class="font-headline font-black text-lg text-sol px-2 py-0.5 bg-white/10 rounded-md border border-white/20">#1F2A44</span>
+<span class="material-symbols-outlined text-2xl text-sol" data-icon="ink_pen">ink_pen</span>
+</div>
+<div class="mt-3">
+<h3 class="font-headline font-black text-lg text-tinta leading-none">Noche Tinta Cómic</h3>
+<p class="text-xs font-mono font-bold text-neutral-500 mt-1">var(--color-tinta)</p>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t-2 border-dashed border-neutral-200">
+<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase bg-tinta text-white rounded border border-tinta">Tinta Maestra</span>
+<p class="text-xs text-neutral-600 mt-1 font-medium">Bordes 3px/4px, sombras proyectadas duras y tipografía de historieta.</p>
+</div>
+</div>
+<!-- Crema Papel -->
+<div class="bg-white border-3 border-tinta rounded-2xl p-4 shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all flex flex-col justify-between">
+<div>
+<div class="h-28 rounded-xl bg-crema border-2 border-tinta shadow-comic-sm flex items-end p-3 justify-between bg-halftone-dense">
+<span class="font-headline font-black text-lg text-tinta px-2 py-0.5 bg-white rounded-md border border-tinta">#FFF6E5</span>
+<span class="material-symbols-outlined text-2xl text-tinta" data-icon="menu_book">menu_book</span>
+</div>
+<div class="mt-3">
+<h3 class="font-headline font-black text-lg text-tinta leading-none">Crema Papel</h3>
+<p class="text-xs font-mono font-bold text-neutral-500 mt-1">var(--color-crema)</p>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t-2 border-dashed border-neutral-200">
+<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase bg-crema-dark text-tinta rounded border border-tinta">Fondo Editorial</span>
+<p class="text-xs text-neutral-600 mt-1 font-medium">Textura base de cuaderno de viajero con micropuntos Ben-Day.</p>
+</div>
+</div>
+<!-- Rosa Stickers -->
+<div class="bg-white border-3 border-tinta rounded-2xl p-4 shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all flex flex-col justify-between">
+<div>
+<div class="h-28 rounded-xl bg-rosa border-2 border-tinta shadow-comic-sm flex items-end p-3 justify-between">
+<span class="font-headline font-black text-lg text-white px-2 py-0.5 bg-tinta rounded-md border border-white">#FF5D8F</span>
+<span class="material-symbols-outlined text-2xl text-white" data-icon="favorite">favorite</span>
+</div>
+<div class="mt-3">
+<h3 class="font-headline font-black text-lg text-tinta leading-none">Rosa Stickers</h3>
+<p class="text-xs font-mono font-bold text-neutral-500 mt-1">var(--color-rosa)</p>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t-2 border-dashed border-neutral-200">
+<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase bg-rosa/20 text-rosa rounded border border-rosa">Lúdico &amp; Emotivo</span>
+<p class="text-xs text-neutral-600 mt-1 font-medium">Reacciones de la comunidad, me gustas, stickers destacados e insignias.</p>
+</div>
+</div>
+<!-- Monte Selva -->
+<div class="bg-white border-3 border-tinta rounded-2xl p-4 shadow-comic hover:-translate-y-1 hover:shadow-comic-lg transition-all flex flex-col justify-between sm:col-span-2 lg:col-span-1">
+<div>
+<div class="h-28 rounded-xl bg-monte border-2 border-tinta shadow-comic-sm flex items-end p-3 justify-between">
+<span class="font-headline font-black text-lg text-white px-2 py-0.5 bg-tinta rounded-md border border-white">#2F9E6B</span>
+<span class="material-symbols-outlined text-2xl text-white" data-icon="forest">forest</span>
+</div>
+<div class="mt-3">
+<h3 class="font-headline font-black text-lg text-tinta leading-none">Monte Selva</h3>
+<p class="text-xs font-mono font-bold text-neutral-500 mt-1">var(--color-monte)</p>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t-2 border-dashed border-neutral-200">
+<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase bg-monte/20 text-monte rounded border border-monte">Naturaleza &amp; Éxito</span>
+<p class="text-xs text-neutral-600 mt-1 font-medium">Puntos de acampada libre, hitos completados y sellos ecológicos.</p>
+</div>
+</div>
+<!-- Matrix Summary Card -->
+<div class="bg-tinta text-white border-3 border-tinta rounded-2xl p-4 shadow-comic flex flex-col justify-between sm:col-span-2 lg:col-span-2 xl:col-span-1">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-sol" data-icon="brush">brush</span>
+<h3 class="font-headline font-black text-base uppercase text-sol">Regla Cómic #1</h3>
+</div>
+<p class="text-xs leading-relaxed text-crema font-body">
+              "Nunca usar sombras difuminadas con desenfoque gaussiano (`blur-md`). Toda sombra en el universo de Jere Móvil se proyecta a 90° o 45° con relleno sólido de tinta #1F2A44."
+            </p>
+</div>
+<div class="mt-4 bg-white/10 p-2.5 rounded-xl border border-white/20 text-[11px] font-mono">
+            box-shadow: 4px 4px 0px #1F2A44;
+          </div>
+</div>
+</div>
+</section>
+<!-- 3. TYPOGRAPHY HIERARCHY & COMIC SPECIMEN -->
+<section class="space-y-6" id="tipografia">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-4 border-tinta pb-3">
+<div>
+<div class="inline-block px-3 py-0.5 text-xs font-black bg-cielo text-white border-2 border-tinta rounded-md shadow-comic-sm mb-1 uppercase">
+            Guía de Letras
+          </div>
+<h2 class="font-headline font-black text-2xl sm:text-3xl text-tinta tracking-tight uppercase flex items-center gap-2">
+<span>02. Jerarquía Tipográfica de Ruta</span>
+</h2>
+</div>
+<p class="font-body text-sm font-bold text-tinta-soft">Rubik Display Heavy + Public Sans Diario</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left: Headings scale -->
+<div class="lg:col-span-7 bg-white border-3 border-tinta rounded-3xl p-6 sm:p-8 shadow-comic space-y-8">
+<!-- Display Specimen -->
+<div class="pb-6 border-b-2 border-dashed border-tinta/20 space-y-2">
+<div class="flex items-center justify-between text-xs font-mono font-bold text-neutral-400 uppercase">
+<span>Display Comic Hero / Rubik Black 900</span>
+<span>48px • leading-tight</span>
+</div>
+<div class="relative inline-block">
+<span class="font-headline text-3xl sm:text-4xl md:text-5xl font-black text-tinta tracking-tight drop-shadow-[2px_2px_0px_#FFC93C]">
+                ¡VROOM! ¡VÁMONOS AL SUR!
+              </span>
+</div>
+<p class="text-xs text-neutral-500 font-medium">Uso: Portadas de bitácora, hitos principales y onomatopeyas.</p>
+</div>
+<!-- H1 Specimen -->
+<div class="pb-6 border-b-2 border-dashed border-tinta/20 space-y-2">
+<div class="flex items-center justify-between text-xs font-mono font-bold text-neutral-400 uppercase">
+<span>H1 Título de Sección / Rubik ExtraBold 800</span>
+<span>32px • leading-snug</span>
+</div>
+<h1 class="font-headline text-2xl sm:text-3xl font-black text-tinta tracking-tight">
+              Bitácora de Viaje #119: Carretera Austral
+            </h1>
+<p class="text-xs text-neutral-500 font-medium">Uso: Título de página, paradas mayores del mapa interactivo.</p>
+</div>
+<!-- H2 Specimen -->
+<div class="pb-6 border-b-2 border-dashed border-tinta/20 space-y-2">
+<div class="flex items-center justify-between text-xs font-mono font-bold text-neutral-400 uppercase">
+<span>H2 Subcapítulo / Rubik Bold 700</span>
+<span>24px • leading-snug</span>
+</div>
+<h2 class="font-headline text-xl sm:text-2xl font-bold text-tinta">
+              Puntualidad mecánica: La Bebi resistió el ripio
+            </h2>
+<p class="text-xs text-neutral-500 font-medium">Uso: Encabezados de tarjetas Polaroid y módulos bento.</p>
+</div>
+<!-- H3 & H4 Specimen -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="space-y-1">
+<div class="text-[11px] font-mono font-bold text-neutral-400 uppercase">H3 / Rubik SemiBold (18px)</div>
+<h3 class="font-headline text-lg font-bold text-tinta">Campamento Río Tranquilo</h3>
+<p class="text-[11px] text-neutral-500">Títulos de widgets y popups.</p>
+</div>
+<div class="space-y-1">
+<div class="text-[11px] font-mono font-bold text-neutral-400 uppercase">H4 / Rubik SemiBold (15px)</div>
+<h4 class="font-headline text-base font-semibold text-tinta">Presión de neumáticos: 32 PSI</h4>
+<p class="text-[11px] text-neutral-500">Sub-ítems técnicos de la furgo.</p>
+</div>
+</div>
+</div>
+<!-- Right: Body Text & Comic Bubble Specimen -->
+<div class="lg:col-span-5 space-y-6">
+<!-- Comic Bubble callout -->
+<div class="relative bg-sol border-3 border-tinta rounded-3xl p-6 shadow-comic comic-tail-bottom">
+<div class="flex items-center gap-2 mb-2">
+<span class="inline-block px-2 py-0.5 bg-tinta text-white text-[10px] font-black uppercase rounded">Voz de Jere</span>
+<span class="text-xs font-bold text-tinta font-headline">Transmisión de Radio VHF</span>
+</div>
+<p class="font-headline text-base sm:text-lg font-bold text-tinta leading-snug">
+              “¡Che, no se imaginan el viento que cruzamos en Fitz Roy! Tuvimos que cocinar adentro con la puerta trancada, pero los fideos con tuco salieron de diez.”
+            </p>
+</div>
+<!-- Lined Paper Diary Specimen -->
+<div class="bg-crema border-3 border-tinta rounded-3xl p-6 shadow-comic space-y-3 mt-4">
+<div class="flex items-center justify-between border-b-2 border-tinta/20 pb-2">
+<span class="font-headline font-black text-xs uppercase text-tinta flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-atardecer" data-icon="edit_note">edit_note</span>
+                Cuerpo Editorial / Public Sans (15px / 1.6)
+              </span>
+<span class="text-[10px] font-mono font-bold text-neutral-500">Lined 28px</span>
+</div>
+<div class="lined-paper text-sm text-tinta font-medium">
+              Amanecimos con escarcha en el parabrisas de La Bebi. El motor arrancó al segundo intento con ese ronquido fiel que ya reconocemos de memoria. Próxima parada: cruzar la barcaza hacia Villa O'Higgins antes de las 14:00 hs.
+            </div>
+<div class="pt-2 flex items-center justify-between text-xs font-bold text-neutral-500 border-t border-dashed border-tinta/20">
+<span>Etiquetas: #CarreteraAustral #CamperLife</span>
+<span>180 Palabras</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. BUTTON SYSTEM & INTERACTIVE STATES -->
+<section class="space-y-6" id="botones">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-4 border-tinta pb-3">
+<div>
+<div class="inline-block px-3 py-0.5 text-xs font-black bg-rosa text-white border-2 border-tinta rounded-md shadow-comic-sm mb-1 uppercase">
+            Interactividad Física
+          </div>
+<h2 class="font-headline font-black text-2xl sm:text-3xl text-tinta tracking-tight uppercase flex items-center gap-2">
+<span>03. Sistema de Botones Arcade &amp; Estados</span>
+</h2>
+</div>
+<p class="font-body text-sm font-bold text-tinta-soft">Física háptica: elevación de hover y presión de active</p>
+</div>
+<!-- Main buttons row -->
+<div class="bg-white border-3 border-tinta rounded-3xl p-6 sm:p-8 shadow-comic space-y-8">
+<div>
+<h3 class="font-headline font-black text-base text-tinta uppercase tracking-wide mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-atardecer" data-icon="touch_app">touch_app</span>
+            Variantes de Botón Principal (Neo-brutalist Pills)
+          </h3>
+<div class="flex flex-wrap items-center gap-4">
+<!-- Sol Arcade (Primary) -->
+<button class="px-6 py-3 bg-sol font-headline text-sm font-black text-tinta uppercase tracking-wide border-3 border-tinta rounded-full shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="navigation">navigation</span>
+<span>Iniciar Ruta Sol</span>
+</button>
+<!-- Atardecer (Secondary) -->
+<button class="px-6 py-3 bg-atardecer font-headline text-sm font-black text-white uppercase tracking-wide border-3 border-tinta rounded-full shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="photo_camera">photo_camera</span>
+<span>Subir Foto Polaroid</span>
+</button>
+<!-- Cielo Ghost -->
+<button class="px-6 py-3 bg-white font-headline text-sm font-black text-cielo-dark uppercase tracking-wide border-3 border-tinta rounded-full shadow-comic hover:bg-cielo/15 hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="download">download</span>
+<span>Descargar Track GPX</span>
+</button>
+<!-- Rosa Sticker Tilted -->
+<button class="px-6 py-3 bg-rosa font-headline text-sm font-black text-white uppercase tracking-wide border-3 border-tinta rounded-full shadow-comic hover:rotate-2 hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all flex items-center gap-2 -rotate-1">
+<span class="material-symbols-outlined text-xl" data-icon="favorite">favorite</span>
+<span>Apoyar el Viaje ($)</span>
+</button>
+<!-- Monte Outdoor -->
+<button class="px-6 py-3 bg-monte font-headline text-sm font-black text-white uppercase tracking-wide border-3 border-tinta rounded-full shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-xl" data-icon="camping">camping</span>
+<span>Acampada Libre</span>
+</button>
+</div>
+</div>
+<!-- Icon Buttons & Sizes -->
+<div class="pt-6 border-t-2 border-dashed border-tinta/20">
+<h3 class="font-headline font-black text-base text-tinta uppercase tracking-wide mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-cielo" data-icon="radio_button_checked">radio_button_checked</span>
+            Icon-Only Buttons &amp; Círculos de Control
+          </h3>
+<div class="flex flex-wrap items-center gap-4">
+<button class="w-12 h-12 bg-white border-3 border-tinta rounded-full flex items-center justify-center text-tinta shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all" title="Brújula">
+<span class="material-symbols-outlined text-2xl" data-icon="explore">explore</span>
+</button>
+<button class="w-12 h-12 bg-sol border-3 border-tinta rounded-full flex items-center justify-center text-tinta shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all" title="Buscar">
+<span class="material-symbols-outlined text-2xl" data-icon="search">search</span>
+</button>
+<button class="w-12 h-12 bg-rosa border-3 border-tinta rounded-full flex items-center justify-center text-white shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all" title="Guardar">
+<span class="material-symbols-outlined text-2xl" data-icon="bookmark">bookmark</span>
+</button>
+<button class="w-12 h-12 bg-atardecer border-3 border-tinta rounded-full flex items-center justify-center text-white shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all" title="Compartir">
+<span class="material-symbols-outlined text-2xl" data-icon="share">share</span>
+</button>
+<button class="w-12 h-12 bg-crema-dark border-3 border-tinta rounded-full flex items-center justify-center text-tinta shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all" title="Capa Satelital">
+<span class="material-symbols-outlined text-2xl" data-icon="layers">layers</span>
+</button>
+<!-- Square variant -->
+<button class="w-12 h-12 bg-white border-3 border-tinta rounded-2xl flex items-center justify-center text-tinta shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all" title="Zoom In">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+</button>
+<button class="w-12 h-12 bg-white border-3 border-tinta rounded-2xl flex items-center justify-center text-tinta shadow-comic hover:-translate-y-1 hover:shadow-comic-lg active:translate-y-1 active:shadow-none transition-all" title="Zoom Out">
+<span class="material-symbols-outlined text-2xl" data-icon="remove">remove</span>
+</button>
+</div>
+</div>
+<!-- Interactive State Matrix Specimen -->
+<div class="pt-6 border-t-2 border-dashed border-tinta/20">
+<h3 class="font-headline font-black text-base text-tinta uppercase tracking-wide mb-4">
+            Matriz de Estados (Demostración Estática de Tokens)
+          </h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center">
+<!-- Default -->
+<div class="p-4 bg-crema rounded-2xl border-2 border-tinta/30 flex flex-col items-center justify-between gap-3">
+<span class="text-xs font-mono font-bold text-neutral-500 uppercase">1. Estado Default</span>
+<div class="px-5 py-2.5 bg-sol font-headline text-xs font-black text-tinta border-3 border-tinta rounded-full shadow-comic">
+                Botón Normal
+              </div>
+<span class="text-[11px] text-neutral-600">translate-0 • shadow-4px</span>
+</div>
+<!-- Hover -->
+<div class="p-4 bg-crema rounded-2xl border-2 border-tinta/30 flex flex-col items-center justify-between gap-3">
+<span class="text-xs font-mono font-bold text-neutral-500 uppercase">2. Hover (Flotando)</span>
+<div class="px-5 py-2.5 bg-sol font-headline text-xs font-black text-tinta border-3 border-tinta rounded-full shadow-comic-lg -translate-y-1">
+                Botón en Hover
+              </div>
+<span class="text-[11px] text-neutral-600">-translate-y-1 • shadow-6px</span>
+</div>
+<!-- Active / Pressed -->
+<div class="p-4 bg-crema rounded-2xl border-2 border-tinta/30 flex flex-col items-center justify-between gap-3">
+<span class="text-xs font-mono font-bold text-neutral-500 uppercase">3. Active (Presionado)</span>
+<div class="px-5 py-2.5 bg-sol-dark font-headline text-xs font-black text-tinta border-3 border-tinta rounded-full shadow-none translate-y-1">
+                Presión Física
+              </div>
+<span class="text-[11px] text-neutral-600">translate-y-1 • shadow-0px</span>
+</div>
+<!-- Disabled -->
+<div class="p-4 bg-crema rounded-2xl border-2 border-tinta/30 flex flex-col items-center justify-between gap-3 opacity-60">
+<span class="text-xs font-mono font-bold text-neutral-500 uppercase">4. Deshabilitado</span>
+<div class="px-5 py-2.5 bg-neutral-200 font-headline text-xs font-bold text-neutral-500 border-2 border-neutral-400 rounded-full cursor-not-allowed">
+                Sin Gasolina
+              </div>
+<span class="text-[11px] text-neutral-600">opacity-60 • cursor-not-allowed</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. COLLECTIBLE STICKERS & STAMP BADGES -->
+<section class="space-y-6" id="stickers">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-4 border-tinta pb-3">
+<div>
+<div class="inline-block px-3 py-0.5 text-xs font-black bg-monte text-white border-2 border-tinta rounded-md shadow-comic-sm mb-1 uppercase">
+            Mochila Scout
+          </div>
+<h2 class="font-headline font-black text-2xl sm:text-3xl text-tinta tracking-tight uppercase flex items-center gap-2">
+<span>04. Stickers, Insignias &amp; Washi Tape</span>
+</h2>
+</div>
+<p class="font-body text-sm font-bold text-tinta-soft">Elementos coleccionables de pasaporte aventurero</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Column A: Washi Tapes -->
+<div class="bg-white border-3 border-tinta rounded-3xl p-6 shadow-comic space-y-4">
+<h3 class="font-headline font-black text-sm uppercase text-tinta border-b-2 border-dashed border-tinta/20 pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-sol-dark" data-icon="label">label</span>
+            Cintas Washi Tape de Cuaderno
+          </h3>
+<div class="flex flex-col gap-3 py-2">
+<div class="washi-tape px-4 py-1.5 border border-tinta/40 rounded-sm font-headline text-xs font-black text-tinta uppercase tracking-wide rotate-1 shadow-sm w-fit">
+              ⛺ Acampada Libre Confirmada
+            </div>
+<div class="bg-rosa/80 px-4 py-1.5 border border-tinta/40 rounded-sm font-headline text-xs font-black text-tinta uppercase tracking-wide -rotate-2 shadow-sm w-fit">
+              💨 Viento Patagónico Superado (90 km/h)
+            </div>
+<div class="bg-cielo/80 px-4 py-1.5 border border-tinta/40 rounded-sm font-headline text-xs font-black text-white uppercase tracking-wide rotate-2 shadow-sm w-fit">
+              ☕ Café Carretero a 0°C
+            </div>
+<div class="bg-sol/90 px-4 py-1.5 border border-tinta/40 rounded-sm font-headline text-xs font-black text-tinta uppercase tracking-wide -rotate-1 shadow-sm w-fit">
+              🏔️ Paso de Jama • 4.200 msnm
+            </div>
+</div>
+<p class="text-[11px] text-neutral-500 font-medium">Uso: Pegadas en las esquinas de fotos y títulos de crónicas.</p>
+</div>
+<!-- Column B: Scout Embroidered Patches -->
+<div class="bg-white border-3 border-tinta rounded-3xl p-6 shadow-comic space-y-4">
+<h3 class="font-headline font-black text-sm uppercase text-tinta border-b-2 border-dashed border-tinta/20 pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-atardecer" data-icon="military_tech">military_tech</span>
+            Parches Scout &amp; Medallas
+          </h3>
+<div class="flex flex-wrap items-center justify-center gap-4 py-2">
+<!-- Circular Patch 1 -->
+<div class="w-20 h-20 rounded-full bg-sol border-4 border-dashed border-tinta flex flex-col items-center justify-center text-center shadow-comic-sm rotate-3 hover:rotate-12 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-xl text-tinta" data-icon="rv_hookup">rv_hookup</span>
+<span class="font-headline text-[9px] font-black uppercase text-tinta leading-tight">Mecánico<br/>Ruta</span>
+</div>
+<!-- Shield Patch 2 -->
+<div class="w-20 h-20 rounded-2xl bg-atardecer border-4 border-tinta flex flex-col items-center justify-center text-center shadow-comic-sm -rotate-6 hover:-rotate-12 transition-transform cursor-pointer text-white">
+<span class="material-symbols-outlined text-xl" data-icon="landscape">landscape</span>
+<span class="font-headline text-[9px] font-black uppercase leading-tight">Andes<br/>Master</span>
+</div>
+<!-- Diamond Patch 3 -->
+<div class="w-20 h-20 rounded-2xl bg-monte border-4 border-tinta flex flex-col items-center justify-center text-center shadow-comic-sm rotate-6 hover:rotate-0 transition-transform cursor-pointer text-white">
+<span class="material-symbols-outlined text-xl" data-icon="filter_vintage">filter_vintage</span>
+<span class="font-headline text-[9px] font-black uppercase leading-tight">Camping<br/>Silvestre</span>
+</div>
+<!-- Badge 4 -->
+<div class="w-20 h-20 rounded-full bg-rosa border-4 border-tinta flex flex-col items-center justify-center text-center shadow-comic-sm -rotate-3 hover:scale-105 transition-transform cursor-pointer text-white">
+<span class="material-symbols-outlined text-xl" data-icon="local_cafe">local_cafe</span>
+<span class="font-headline text-[9px] font-black uppercase leading-tight">1000<br/>Mates</span>
+</div>
+</div>
+<p class="text-[11px] text-neutral-500 font-medium">Uso: Recompensas al explorar paradas del mapa.</p>
+</div>
+<!-- Column C: Kilometers & Expedition Counters -->
+<div class="bg-white border-3 border-tinta rounded-3xl p-6 shadow-comic space-y-4">
+<h3 class="font-headline font-black text-sm uppercase text-tinta border-b-2 border-dashed border-tinta/20 pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-rosa" data-icon="speed">speed</span>
+            Contadores de Odisea
+          </h3>
+<div class="space-y-3 py-1">
+<div class="flex items-center justify-between p-2.5 bg-crema border-2 border-tinta rounded-2xl shadow-comic-sm">
+<span class="text-xs font-bold uppercase text-tinta flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-atardecer" data-icon="calendar_today">calendar_today</span>
+                Días de Viaje
+              </span>
+<span class="font-headline font-black text-base px-2.5 py-0.5 bg-sol rounded-lg border border-tinta shadow-comic-sm">Día 120</span>
+</div>
+<div class="flex items-center justify-between p-2.5 bg-crema border-2 border-tinta rounded-2xl shadow-comic-sm">
+<span class="text-xs font-bold uppercase text-tinta flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-cielo" data-icon="distance">distance</span>
+                Distancia Acumulada
+              </span>
+<span class="font-headline font-black text-base px-2.5 py-0.5 bg-white rounded-lg border border-tinta shadow-comic-sm">15.420 KM</span>
+</div>
+<div class="flex items-center justify-between p-2.5 bg-crema border-2 border-tinta rounded-2xl shadow-comic-sm">
+<span class="text-xs font-bold uppercase text-tinta flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-monte" data-icon="local_gas_station">local_gas_station</span>
+                Estado Furgo
+              </span>
+<span class="font-headline font-black text-xs px-2.5 py-1 bg-monte text-white rounded-lg border border-tinta shadow-comic-sm uppercase">Tanque Lleno</span>
+</div>
+</div>
+<p class="text-[11px] text-neutral-500 font-medium">Uso: Widget estático en el panel superior del mapa de ruta.</p>
+</div>
+</div>
+</section>
+<!-- 6. COMIC CARDS & SCRAPBOOK CONTAINERS -->
+<section class="space-y-6" id="scrapbook">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-4 border-tinta pb-3">
+<div>
+<div class="inline-block px-3 py-0.5 text-xs font-black bg-sol border-2 border-tinta rounded-md shadow-comic-sm mb-1 uppercase">
+            Contenedores Álbum
+          </div>
+<h2 class="font-headline font-black text-2xl sm:text-3xl text-tinta tracking-tight uppercase flex items-center gap-2">
+<span>05. Tarjetas Polaroid &amp; Cuaderno de Recortes</span>
+</h2>
+</div>
+<p class="font-body text-sm font-bold text-tinta-soft">Sensación analógica con bordes de tinta y cinta adhesiva</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+<!-- Polaroid Card 1 -->
+<div class="relative bg-white border-3 border-tinta p-4 pb-6 rounded-2xl shadow-comic-lg -rotate-2 hover:rotate-0 transition-transform">
+<!-- Washi tape at top -->
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 washi-tape px-6 py-1 border border-tinta/30 text-[10px] font-black uppercase text-tinta rounded-xs rotate-1 z-10 shadow-sm">
+            FOTO POLAROID #042
+          </div>
+<div class="mt-2 aspect-square bg-crema-dark rounded-xl border-2 border-tinta overflow-hidden relative group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A vintage comic style photographic rendering of a turquoise retro camper van parked on the edge of a turquoise glacial lake in Patagonia under giant snow-capped Andean peaks, illuminated by bright sunny warm daylight with rich ink outlines, saturated colors, warm film grain and playful roadtrip adventure vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbD2l8nrv3Tf5TRhjRkQtNvVKA9MlOGu_kRgpmCDBtvm3b9WciS594mGCpJrbXrXo0LTHM8DpikvT590ICAW-I9ZPqBt88RB-Z8aCEhy_cGfgz8b-nW9m-EbuwuYW58c3CwI1sV_gwLY-q11kA7AGduI43cLQ4MQesJvcmdYVFBFvvZlf8gYqaSCaHPExuGc-wBc7De2EgWlXM33B3azYvR62jURzJN5EmKWCuZ7fIVehC6-6LEQvVnhv1Jzqs6WSIvwueoT9GnVM"/>
+<div class="absolute bottom-2 right-2 px-2 py-0.5 bg-sol text-tinta font-headline text-[10px] font-black border border-tinta rounded shadow-comic-sm">
+              ☀️ 18°C
+            </div>
+</div>
+<div class="mt-4 text-center space-y-1">
+<p class="font-headline text-base font-black text-tinta tracking-tight">"La Bebi frente al Glaciar"</p>
+<p class="text-xs text-neutral-500 font-bold">Lago General Carrera • 14 Enero</p>
+</div>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-dashed border-tinta/20 text-xs">
+<span class="flex items-center gap-1 font-bold text-rosa">
+<span class="material-symbols-outlined text-sm" data-icon="favorite">favorite</span> 248 Likes
+            </span>
+<span class="text-neutral-400 font-mono text-[10px]">#0119-AUSTR</span>
+</div>
+</div>
+<!-- Speech Bubble Callout Container -->
+<div class="relative bg-white border-3 border-tinta p-6 rounded-3xl shadow-comic space-y-4">
+<div class="flex items-center justify-between border-b-2 border-dashed border-tinta/20 pb-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-cielo text-white rounded-lg font-headline text-xs font-black uppercase border border-tinta shadow-comic-sm">
+<span class="material-symbols-outlined text-sm" data-icon="tips_and_updates">tips_and_updates</span>
+              ¿Sabías que...?
+            </span>
+<span class="text-xs font-bold text-neutral-400">Dato Mecánico</span>
+</div>
+<!-- Bubble content -->
+<div class="bg-crema p-4 rounded-2xl border-2 border-tinta relative">
+<p class="text-sm font-medium text-tinta leading-relaxed">
+<strong class="font-headline font-black text-tinta block mb-1">El apetito de La Bebi ⛽</strong>
+              En subidas andinas a más de 3.000 metros de altura, La Bebi consume unos <strong>11.5 Litros cada 100 km</strong>. ¡Por suerte siempre llevamos dos bidones extra en el portaequipaje de arriba!
+            </p>
+</div>
+<div class="flex items-center gap-3 pt-2">
+<div class="w-10 h-10 rounded-full bg-sol border-2 border-tinta flex items-center justify-center font-headline font-black text-xs shadow-comic-sm">
+              JM
+            </div>
+<div>
+<div class="font-headline font-black text-xs text-tinta">Jere en el Volante</div>
+<div class="text-[11px] text-neutral-500 font-medium">Piloto y Mecánico Improvisado</div>
+</div>
+</div>
+</div>
+<!-- Scrapbook Diary Card -->
+<div class="bg-crema border-3 border-tinta p-5 rounded-3xl shadow-comic rotate-1 hover:rotate-0 transition-transform space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-rosa border border-tinta"></span>
+<span class="w-3 h-3 rounded-full bg-sol border border-tinta"></span>
+<span class="w-3 h-3 rounded-full bg-monte border border-tinta"></span>
+</div>
+<span class="px-2 py-0.5 bg-white border border-tinta rounded-md text-[10px] font-black uppercase shadow-comic-sm">
+              Sello Postal
+            </span>
+</div>
+<div class="space-y-2">
+<span class="text-xs font-mono font-bold text-atardecer">PARADA #23 // BARILOCHE</span>
+<h4 class="font-headline font-black text-lg text-tinta leading-snug">
+              Chocolate, mates y cambio de pastillas de freno
+            </h4>
+<p class="text-xs text-neutral-700 leading-relaxed font-body">
+              Nos quedamos 3 noches en el bosque municipal. La gente se acerca a saludar y a sacarse fotos con La Bebi. Nos regalaron pan casero recién horneado.
+            </p>
+</div>
+<div class="pt-3 border-t-2 border-dashed border-tinta/30 flex items-center justify-between">
+<span class="inline-flex items-center gap-1 text-xs font-black text-monte">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span> Hito superado
+            </span>
+<button class="px-2.5 py-1 bg-white border-2 border-tinta rounded-lg text-xs font-black hover:bg-sol transition-colors shadow-comic-sm">
+              Leer Entrada ➔
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- 7. CARTOON MAP ASSETS & NAVIGATION UI -->
+<section class="space-y-6" id="map-assets">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-4 border-tinta pb-3">
+<div>
+<div class="inline-block px-3 py-0.5 text-xs font-black bg-cielo text-white border-2 border-tinta rounded-md shadow-comic-sm mb-1 uppercase">
+            Cartografía Cómic
+          </div>
+<h2 class="font-headline font-black text-2xl sm:text-3xl text-tinta tracking-tight uppercase flex items-center gap-2">
+<span>06. Activos del Mapa &amp; Timeline de Carretera</span>
+</h2>
+</div>
+<p class="font-body text-sm font-bold text-tinta-soft">Tokens ilustrados de La Bebi, waypoints y scrubber</p>
+</div>
+<div class="bg-white border-3 border-tinta rounded-3xl p-6 sm:p-8 shadow-comic space-y-8">
+<!-- Interactive Map Preview Simulator -->
+<div class="relative bg-[#CFE8FF] border-3 border-tinta rounded-2xl h-80 sm:h-96 w-full overflow-hidden shadow-comic-inner">
+<!-- Vector Map Grid Texture / Contour simulation -->
+<div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#1F2A44 1.5px, transparent 1.5px); background-size: 20px 20px;"></div>
+<!-- Island / Landmass Shape (Illustration) -->
+<div class="absolute top-8 left-12 right-12 bottom-16 bg-[#FCECD0] rounded-3xl border-3 border-tinta -rotate-1 shadow-comic pointer-events-none">
+<!-- Mountain peak doodle -->
+<div class="absolute top-6 left-12 text-tinta/30 font-headline font-black text-2xl">▲ ▲ ▲ ANDES</div>
+<div class="absolute bottom-6 right-16 text-tinta/30 font-headline font-black text-xl">🌊 PACÍFICO</div>
+</div>
+<!-- Route Path Lines -->
+<!-- Completed Orange Solid Line -->
+<div class="absolute top-1/2 left-20 w-1/3 h-2 bg-atardecer border-y-2 border-tinta z-10 -translate-y-1/2 rotate-3"></div>
+<!-- Future Dashed Black Line -->
+<div class="absolute top-1/2 left-[50%] w-1/3 h-0 border-t-3 border-dashed border-tinta z-10 -translate-y-1/2 -rotate-3"></div>
+<!-- Waypoint Pins -->
+<!-- Pin 1: Completed -->
+<div class="absolute top-[44%] left-16 z-20 flex flex-col items-center group cursor-pointer">
+<div class="w-9 h-9 rounded-full bg-monte border-3 border-tinta flex items-center justify-center text-white font-headline text-xs font-black shadow-comic-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-base" data-icon="check">check</span>
+</div>
+<span class="mt-1 px-2 py-0.5 bg-white border border-tinta rounded font-headline text-[10px] font-black shadow-comic-sm">
+              #01 Bs. Aires
+            </span>
+</div>
+<!-- Pin 2: Active / Current Location (La Bebi Pin!) -->
+<div class="absolute top-[52%] left-[46%] z-30 flex flex-col items-center cursor-pointer -translate-x-1/2 -translate-y-1/2 group">
+<!-- Floating Label Speech Bubble -->
+<div class="mb-2 px-3 py-1 bg-sol border-2 border-tinta rounded-xl font-headline text-xs font-black text-tinta shadow-comic-sm animate-bounce flex items-center gap-1">
+<span>🚐 ¡AQUÍ ESTAMOS!</span>
+</div>
+<!-- La Bebi Camper Van Avatar Icon -->
+<div class="w-14 h-14 rounded-2xl bg-white border-3 border-tinta flex items-center justify-center shadow-comic-lg hover:scale-110 transition-transform">
+<span class="text-2xl">🚐</span>
+</div>
+<span class="mt-1 px-2 py-0.5 bg-tinta text-white rounded font-headline text-[10px] font-black uppercase">
+              San Martín
+            </span>
+</div>
+<!-- Pin 3: Future -->
+<div class="absolute top-[40%] right-20 z-20 flex flex-col items-center opacity-70 group cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-white border-2 border-dashed border-tinta flex items-center justify-center text-tinta font-headline text-xs font-black shadow-comic-sm group-hover:scale-110 transition-transform">
+              03
+            </div>
+<span class="mt-1 px-2 py-0.5 bg-white/90 border border-tinta/50 rounded font-headline text-[10px] font-bold">
+              #03 Machu Picchu
+            </span>
+</div>
+<!-- Floating Map Controls HUD -->
+<div class="absolute top-4 right-4 z-20 flex flex-col gap-2">
+<button class="w-10 h-10 bg-white border-2 border-tinta rounded-xl shadow-comic-sm flex items-center justify-center text-tinta font-black hover:bg-sol active:translate-y-0.5 transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="add">add</span>
+</button>
+<button class="w-10 h-10 bg-white border-2 border-tinta rounded-xl shadow-comic-sm flex items-center justify-center text-tinta font-black hover:bg-sol active:translate-y-0.5 transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="remove">remove</span>
+</button>
+<button class="w-10 h-10 bg-sol border-2 border-tinta rounded-xl shadow-comic-sm flex items-center justify-center text-tinta font-black hover:rotate-12 active:translate-y-0.5 transition-all" title="Centrar en La Bebi">
+<span class="material-symbols-outlined text-lg" data-icon="my_location">my_location</span>
+</button>
+</div>
+<!-- Compass Rose Doodle -->
+<div class="absolute bottom-4 left-4 z-20 bg-white/90 border-2 border-tinta p-2 rounded-2xl shadow-comic-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-atardecer text-xl" data-icon="explore">explore</span>
+<div class="font-headline font-black text-[11px] leading-tight">
+              RUMBO SUR<br/><span class="text-neutral-500 font-mono text-[9px]">40° 08' S</span>
+</div>
+</div>
+</div>
+<!-- Tire Track Timeline Scrubber Bar -->
+<div class="space-y-3 pt-2">
+<div class="flex items-center justify-between text-xs font-headline font-black uppercase text-tinta">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-atardecer" data-icon="tire_repair">tire_repair</span>
+              Línea de Tiempo de Ruta (Scrubber Interactivo)
+            </span>
+<span class="px-2 py-0.5 bg-sol border border-tinta rounded shadow-comic-sm">62% Recorrido Total</span>
+</div>
+<!-- The track bar -->
+<div class="relative w-full h-7 bg-crema border-3 border-tinta rounded-full p-1 shadow-comic flex items-center">
+<!-- Progress fill -->
+<div class="h-full bg-atardecer rounded-full border-r-2 border-tinta flex items-center justify-end pr-2" style="width: 62%;">
+<span class="w-2.5 h-2.5 rounded-full bg-sol border border-tinta animate-ping"></span>
+</div>
+<!-- Van scrubber head -->
+<div class="absolute left-[62%] -translate-x-1/2 -top-2 w-10 h-10 bg-white border-3 border-tinta rounded-xl shadow-comic-sm flex items-center justify-center cursor-grab active:cursor-grabbing hover:scale-110 transition-transform">
+<span class="text-base">🚐</span>
+</div>
+</div>
+<div class="flex justify-between items-center text-[11px] font-bold text-neutral-500 pt-1">
+<span>Buenos Aires (Km 0)</span>
+<span class="text-tinta font-black">San Martín de los Andes (Km 1.550)</span>
+<span>Ushuaia Fin del Mundo (Km 3.200)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 8. FORM CONTROLS & NEO-BRUTALIST INPUTS -->
+<section class="space-y-6" id="forms">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-4 border-tinta pb-3">
+<div>
+<div class="inline-block px-3 py-0.5 text-xs font-black bg-rosa text-white border-2 border-tinta rounded-md shadow-comic-sm mb-1 uppercase">
+            Entradas &amp; Filtros
+          </div>
+<h2 class="font-headline font-black text-2xl sm:text-3xl text-tinta tracking-tight uppercase flex items-center gap-2">
+<span>07. Controles de Formulario Cómic</span>
+</h2>
+</div>
+<p class="font-body text-sm font-bold text-tinta-soft">Inputs con sombras duras, pills segmentados y toggles</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Left: Search & Text Inputs -->
+<div class="bg-white border-3 border-tinta rounded-3xl p-6 sm:p-8 shadow-comic space-y-6">
+<h3 class="font-headline font-black text-base text-tinta uppercase tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-cielo" data-icon="manage_search">manage_search</span>
+            Buscador Cómic &amp; Campo de Texto
+          </h3>
+<!-- Search Bar with shortcut -->
+<div class="space-y-2">
+<label class="block font-headline text-xs font-black uppercase text-tinta">Buscar parada en el mapa</label>
+<div class="relative flex items-center">
+<span class="absolute left-4 text-tinta material-symbols-outlined" data-icon="search">search</span>
+<input class="w-full pl-12 pr-24 py-3 bg-crema text-tinta font-headline text-sm font-bold border-3 border-tinta rounded-2xl shadow-comic placeholder:text-neutral-400 placeholder:font-normal focus:outline-none focus:bg-white focus:-translate-y-0.5 focus:shadow-comic-lg transition-all" placeholder="Ej. Glaciar Perito Moreno, Bariloche..." type="text"/>
+<div class="absolute right-3 px-2 py-1 bg-white border border-tinta rounded-lg text-[10px] font-mono font-black shadow-comic-sm pointer-events-none">
+                ⌘K
+              </div>
+</div>
+</div>
+<!-- Select Dropdown with comic arrow -->
+<div class="space-y-2">
+<label class="block font-headline text-xs font-black uppercase text-tinta">Filtrar por País o Región</label>
+<div class="relative">
+<select class="w-full py-3 px-4 bg-white text-tinta font-headline text-sm font-bold border-3 border-tinta rounded-2xl shadow-comic appearance-none focus:outline-none cursor-pointer">
+<option>🇦🇷 Argentina (Ruta 40 &amp; Patagonia)</option>
+<option>🇨🇱 Chile (Carretera Austral)</option>
+<option>🇧🇴 Bolivia (Salar de Uyuni)</option>
+<option>🇵🇪 Perú (Cusco &amp; Valle Sagrado)</option>
+</select>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-tinta">
+<span class="material-symbols-outlined font-black" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Segmented Tab Switcher -->
+<div class="space-y-2 pt-2">
+<label class="block font-headline text-xs font-black uppercase text-tinta">Modo de Visualización de Mapa</label>
+<div class="p-1.5 bg-crema border-3 border-tinta rounded-2xl shadow-comic flex items-center gap-1">
+<button class="flex-1 py-2 font-headline text-xs font-black uppercase rounded-xl bg-sol text-tinta border-2 border-tinta shadow-comic-sm">
+                Caricatura
+              </button>
+<button class="flex-1 py-2 font-headline text-xs font-bold text-neutral-600 hover:text-tinta transition-colors">
+                Relieve
+              </button>
+<button class="flex-1 py-2 font-headline text-xs font-bold text-neutral-600 hover:text-tinta transition-colors">
+                Fotos
+              </button>
+</div>
+</div>
+</div>
+<!-- Right: Filter Pills, Checkboxes & Toggles -->
+<div class="bg-white border-3 border-tinta rounded-3xl p-6 sm:p-8 shadow-comic space-y-6">
+<h3 class="font-headline font-black text-base text-tinta uppercase tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-monte" data-icon="tune">tune</span>
+            Chips de Filtro &amp; Toggles Hápticos
+          </h3>
+<!-- Filter Pills -->
+<div class="space-y-2">
+<label class="block font-headline text-xs font-black uppercase text-tinta">Pills de Categoría</label>
+<div class="flex flex-wrap gap-2">
+<!-- Active Pill -->
+<button class="px-3.5 py-1.5 bg-sol text-tinta font-headline text-xs font-black rounded-full border-2 border-tinta shadow-comic-sm flex items-center gap-1.5 -translate-y-0.5">
+<span class="material-symbols-outlined text-sm" data-icon="check">check</span>
+                Campings Gratis
+              </button>
+<!-- Inactive Pill 1 -->
+<button class="px-3.5 py-1.5 bg-crema text-neutral-600 hover:text-tinta font-headline text-xs font-bold rounded-full border-2 border-tinta/40 hover:border-tinta shadow-comic-sm transition-all flex items-center gap-1.5">
+                Mecánicos Furgo
+              </button>
+<!-- Inactive Pill 2 -->
+<button class="px-3.5 py-1.5 bg-crema text-neutral-600 hover:text-tinta font-headline text-xs font-bold rounded-full border-2 border-tinta/40 hover:border-tinta shadow-comic-sm transition-all flex items-center gap-1.5">
+                Rutas Ripio
+              </button>
+<!-- Inactive Pill 3 -->
+<button class="px-3.5 py-1.5 bg-rosa text-white font-headline text-xs font-black rounded-full border-2 border-tinta shadow-comic-sm flex items-center gap-1.5">
+                ⭐ Favoritos
+              </button>
+</div>
+</div>
+<!-- Custom Comic Toggle Switches -->
+<div class="space-y-4 pt-2">
+<label class="block font-headline text-xs font-black uppercase text-tinta">Configuración de Visualización</label>
+<!-- Toggle 1: Checked -->
+<label class="flex items-center justify-between p-3 bg-crema rounded-2xl border-2 border-tinta cursor-pointer shadow-comic-sm">
+<span class="font-headline text-xs font-black text-tinta flex items-center gap-2">
+<span class="material-symbols-outlined text-atardecer" data-icon="wifi_off">wifi_off</span>
+                Descargar mapas para uso sin conexión (Offline)
+              </span>
+<div class="w-12 h-7 bg-monte rounded-full border-2 border-tinta p-0.5 transition-colors relative">
+<div class="w-5 h-5 bg-white rounded-full border-2 border-tinta shadow-comic-sm translate-x-5 transition-transform"></div>
+</div>
+</label>
+<!-- Toggle 2: Unchecked -->
+<label class="flex items-center justify-between p-3 bg-crema rounded-2xl border-2 border-tinta cursor-pointer shadow-comic-sm">
+<span class="font-headline text-xs font-black text-tinta flex items-center gap-2">
+<span class="material-symbols-outlined text-cielo" data-icon="notifications_active">notifications_active</span>
+                Alertas de tormenta de viento en ruta
+              </span>
+<div class="w-12 h-7 bg-neutral-300 rounded-full border-2 border-tinta p-0.5 transition-colors relative">
+<div class="w-5 h-5 bg-white rounded-full border-2 border-tinta shadow-comic-sm translate-x-0 transition-transform"></div>
+</div>
+</label>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- ================= FOOTER (Shared Components JSON) ================= -->
+<footer class="docked full-width bottom bg-white dark:bg-neutral-900 border-t-4 border-neutral-900 dark:border-neutral-800 shadow-[0_-4px_0px_0px_rgba(31,42,68,1)] mt-16">
+<div class="w-full py-6 px-4 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl mx-auto">
+<!-- Brand & Copyright -->
+<div class="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+<span class="font-headline text-lg font-black text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+<span>JERE MÓVIL</span>
+<span class="text-xs px-2 py-0.5 bg-sol text-tinta rounded-md border border-tinta font-black shadow-comic-sm">DS v2.4</span>
+</span>
+<span class="font-body text-sm font-bold text-neutral-600 dark:text-neutral-400">
+          © 2024 Jere Móvil &amp; La Bebi Rodante • ¡Hecho con amor y gasolina!
+        </span>
+</div>
+<!-- Links from JSON -->
+<div class="flex items-center gap-6 font-body text-sm font-bold">
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 hover:underline transition-colors active:scale-95 transition-transform duration-100" href="#instagram">
+          Instagram
+        </a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 hover:underline transition-colors active:scale-95 transition-transform duration-100" href="#youtube">
+          YouTube
+        </a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 hover:underline transition-colors active:scale-95 transition-transform duration-100" href="#gpx">
+          Ruta GPX
+        </a>
+<a class="text-neutral-900 dark:text-neutral-100 font-black underline hover:text-rosa transition-colors active:scale-95 transition-transform duration-100" href="#apoyar">
+          Apoyar el Viaje
+        </a>
+</div>
+</div>
+</footer>
+</body></html>

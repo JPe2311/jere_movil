@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Jere Móvil 🚐 • Mapa de Aventuras &amp; Bitácora Rodante</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&amp;family=Rubik:ital,wght@0,500;0,700;0,800;0,900;1,700;1,900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            // Colors mapped to palette
+            amber: {
+              400: '#FFC93C',
+              500: '#FFB800'
+            },
+            orange: {
+              500: '#FF7A3D',
+              600: '#E85E20'
+            },
+            sky: {
+              400: '#2D9CDB',
+              500: '#1D80BA'
+            },
+            pink: {
+              500: '#FF5D8F'
+            },
+            emerald: {
+              500: '#2F9E6B'
+            }
+          },
+          borderRadius: {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Rubik", "sans-serif"],
+            display: ["Rubik", "sans-serif"],
+            body: ["Public Sans", "sans-serif"],
+            label: ["Public Sans", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    
+    /* Halftone Comic Dots Pattern */
+    .comic-halftone {
+      background-color: #FFFDF7;
+      background-image: radial-gradient(#1F2A44 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+      background-position: 0 0;
+      opacity: 0.96;
+    }
+
+    /* Comic neo-brutal hard shadows */
+    .comic-shadow-sm {
+      box-shadow: 2px 2px 0px 0px #1F2A44;
+    }
+    .comic-shadow {
+      box-shadow: 4px 4px 0px 0px #1F2A44;
+    }
+    .comic-shadow-lg {
+      box-shadow: 6px 6px 0px 0px #1F2A44;
+    }
+    .comic-shadow-hover:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px 0px #1F2A44;
+    }
+    .comic-shadow-hover:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px 0px #1F2A44;
+    }
+
+    /* Washi tape look */
+    .washi-tape-yellow {
+      background: rgba(255, 201, 60, 0.85);
+      border-left: 2px dashed #1F2A44;
+      border-right: 2px dashed #1F2A44;
+    }
+
+    /* Keyframe cartoon van bounce */
+    @keyframes vanBounce {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(-1deg); }
+    }
+    .animate-van {
+      animation: vanBounce 2.4s ease-in-out infinite;
+    }
+
+    /* Tire tread pattern for scrubber */
+    .tire-treads {
+      background: repeating-linear-gradient(
+        -45deg,
+        #1F2A44,
+        #1F2A44 6px,
+        #FF7A3D 6px,
+        #FF7A3D 12px
+      );
+    }
+  </style>
+</head>
+<body class="h-full w-full overflow-hidden bg-[#FFFDF7] text-neutral-900 font-body select-none flex flex-col">
+<!-- TOP NAVIGATION BAR (Shared Component Anchored) -->
+<header class="docked full-width top-0 z-50 bg-white/95 dark:bg-neutral-900/95 border-b-4 border-neutral-900 dark:border-neutral-800 shadow-[0_4px_0px_0px_rgba(31,42,68,1)] transition-colors">
+<div class="flex justify-between items-center w-full px-4 md:px-8 py-2.5 max-w-7xl mx-auto gap-4">
+<!-- Brand Logo Cluster -->
+<div class="flex items-center gap-3">
+<a class="flex items-center gap-2 group" href="#">
+<div class="w-10 h-10 rounded-full bg-amber-400 border-[3px] border-neutral-900 flex items-center justify-center comic-shadow-sm group-hover:rotate-12 transition-transform">
+<span class="text-xl">🚐</span>
+</div>
+<span class="font-headline text-xl md:text-2xl font-black tracking-tight text-neutral-900 dark:text-neutral-50 drop-shadow-sm">
+            JERE MÓVIL 🚐
+          </span>
+</a>
+<!-- Live Expedition Badges (Comic Sticker Style) -->
+<div class="hidden lg:flex items-center gap-2 ml-4">
+<span class="bg-[#FFF6E5] text-neutral-900 border-2 border-neutral-900 text-xs font-black px-2.5 py-1 rounded-full comic-shadow-sm flex items-center gap-1.5 rotate-[-1deg]">
+<span>Día 120 📅</span>
+</span>
+<span class="bg-amber-400 text-neutral-900 border-2 border-neutral-900 text-xs font-black px-2.5 py-1 rounded-full comic-shadow-sm flex items-center gap-1 rotate-[1deg]">
+<span>15.420 KM 🛣️</span>
+</span>
+<span class="bg-emerald-500 text-white border-2 border-neutral-900 text-xs font-black px-2.5 py-1 rounded-full comic-shadow-sm flex items-center gap-1">
+<span>Combustible: Full ⛽</span>
+</span>
+</div>
+</div>
+<!-- Navigation Links (Centered on Desktop) -->
+<nav class="hidden md:flex items-center gap-6 font-headline text-sm">
+<a class="border-b-4 border-neutral-900 dark:border-neutral-100 text-neutral-900 dark:text-neutral-100 font-black pb-1 flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="explore">explore</span>
+          Mapa
+        </a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="#">
+          Bitácora
+        </a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="#">
+          La Bebi
+        </a>
+<a class="text-neutral-600 dark:text-neutral-400 font-bold hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors" href="#">
+          Fotos
+        </a>
+</nav>
+<!-- Search Bar & Trailing Action Buttons -->
+<div class="flex items-center gap-2 md:gap-3">
+<!-- Sticker Search Bar -->
+<div class="relative hidden sm:block">
+<div class="flex items-center bg-[#FFF9E6] border-[3px] border-neutral-900 rounded-full px-3 py-1 comic-shadow-sm focus-within:ring-2 ring-amber-400 transition-all">
+<span class="material-symbols-outlined text-neutral-800 text-lg mr-1.5" data-icon="search">search</span>
+<input class="bg-transparent border-0 p-0 text-xs font-bold text-neutral-900 focus:ring-0 placeholder:text-neutral-500 w-28 md:w-36" placeholder="Buscar hito o pueblo..." type="text"/>
+<span class="text-[10px] bg-white border border-neutral-900 px-1 rounded font-black text-neutral-600">CMD+K</span>
+</div>
+</div>
+<!-- Language Pill -->
+<button class="bg-white border-2 border-neutral-900 text-xs font-black px-2.5 py-1.5 rounded-full comic-shadow-sm hover:bg-neutral-100 active:translate-y-0.5 transition-transform">
+          ES / EN
+        </button>
+<!-- Primary Action: Ruta Actual -->
+<button class="bg-amber-400 hover:bg-amber-500 text-neutral-900 border-[3px] border-neutral-900 text-xs md:text-sm font-black px-3.5 py-1.5 rounded-full comic-shadow comic-shadow-hover transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm font-black" data-icon="route">route</span>
+<span class="hidden sm:inline">Ruta Actual</span>
+<span class="sm:hidden">Ruta</span>
+</button>
+<!-- User Profile Avatar Pill -->
+<div class="w-8 h-8 rounded-full border-2 border-neutral-900 bg-sky-400 flex items-center justify-center text-sm font-black comic-shadow-sm" title="Avatar caricatura de Jere con gorra aventurera">
+          🤠
+        </div>
+</div>
+</div>
+</header>
+<!-- MAIN INTERACTIVE CARTOON MAP ARENA -->
+<main class="relative flex-1 w-full h-[calc(100vh-140px)] overflow-hidden comic-halftone">
+<!-- Cartoon Geography Canvas (Stylized Vector Terrain SVG + Accents) -->
+<div class="absolute inset-0 pointer-events-none opacity-40">
+<!-- Geographic continent outlines & mountain cartoon strokes -->
+<svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+<!-- Mountain Doodles -->
+<g fill="#FFEAA7" stroke="#1F2A44" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5">
+<!-- Andes Chain Representation -->
+<polygon points="260,210 280,170 300,210"></polygon>
+<polygon points="290,210 315,160 340,210"></polygon>
+<polygon points="330,210 350,175 370,210"></polygon>
+<polygon points="380,360 410,290 440,360"></polygon>
+<polygon points="430,360 455,305 480,360"></polygon>
+<polygon points="470,360 495,315 520,360"></polygon>
+<polygon points="560,540 590,470 620,540"></polygon>
+<polygon points="610,540 635,485 660,540"></polygon>
+</g>
+<!-- Ocean Waves Doodles -->
+<path d="M 120,400 Q 135,390 150,400 T 180,400" fill="none" stroke="#2D9CDB" stroke-linecap="round" stroke-width="3"></path>
+<path d="M 100,520 Q 115,510 130,520 T 160,520" fill="none" stroke="#2D9CDB" stroke-linecap="round" stroke-width="3"></path>
+<path d="M 920,320 Q 935,310 950,320 T 980,320" fill="none" stroke="#2D9CDB" stroke-linecap="round" stroke-width="3"></path>
+<path d="M 980,480 Q 995,470 1010,480 T 1040,480" fill="none" stroke="#2D9CDB" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+</div>
+<!-- Whimsical Interactive Map Elements & Paths Layer -->
+<div class="relative w-full h-full max-w-7xl mx-auto px-4 md:px-8 pt-6">
+<!-- Map Trail SVG overlay (Connecting the waypoints) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="roadGradient" x1="0%" x2="0%" y1="100%" y2="0%">
+<stop offset="0%" stop-color="#2F9E6B"></stop>
+<stop offset="50%" stop-color="#FF7A3D"></stop>
+<stop offset="100%" stop-color="#FFC93C"></stop>
+</lineargradient>
+</defs>
+<!-- Completed Trail: Buenos Aires -> Bariloche -> Atacama -->
+<path class="animate-pulse" d="M 720,530 C 620,550 480,560 430,490 C 370,410 410,310 440,250" fill="none" stroke="#FF7A3D" stroke-dasharray="14 10" stroke-linecap="round" stroke-width="7"></path>
+<!-- Trail Ink Outer Border -->
+<path d="M 720,530 C 620,550 480,560 430,490 C 370,410 410,310 440,250" fill="none" stroke="#1F2A44" stroke-dasharray="14 10" stroke-linecap="round" stroke-width="2"></path>
+<!-- Future Projected Route: Atacama -> Uyuni -> Cusco (Pencil Sketch Dashed) -->
+<path d="M 440,250 C 460,200 450,150 400,120 C 360,95 320,80 270,75" fill="none" opacity="0.65" stroke="#1F2A44" stroke-dasharray="8 8" stroke-linecap="round" stroke-width="4"></path>
+</svg>
+<!-- WAYPOINT 1: Buenos Aires (Completado / Inicio) -->
+<div class="absolute left-[65%] top-[70%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="flex flex-col items-center">
+<div class="bg-white border-[3px] border-neutral-900 px-3 py-1 rounded-full text-xs font-black comic-shadow-sm -rotate-2 mb-1.5 group-hover:scale-105 transition-transform flex items-center gap-1">
+<span>Buenos Aires</span>
+<span class="text-emerald-500 font-black">✓</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-emerald-500 border-[3px] border-neutral-900 comic-shadow flex items-center justify-center text-white font-black text-sm group-hover:rotate-12 transition-transform">
+            1
+          </div>
+<span class="text-[10px] font-black uppercase tracking-wider text-neutral-700 bg-white/80 px-1 rounded mt-1 border border-neutral-900">Salida: Km 0</span>
+</div>
+</div>
+<!-- WAYPOINT 2: Bariloche (Lagos y chocolate) -->
+<div class="absolute left-[39%] top-[66%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="flex flex-col items-center">
+<div class="bg-[#FFF6E5] border-[3px] border-neutral-900 px-3 py-1 rounded-full text-xs font-black comic-shadow-sm rotate-2 mb-1.5 group-hover:scale-105 transition-transform flex items-center gap-1">
+<span>Bariloche 🍫</span>
+<span class="text-emerald-500 font-black">✓</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-sky-400 border-[3px] border-neutral-900 comic-shadow flex items-center justify-center text-neutral-900 font-black text-sm group-hover:rotate-12 transition-transform">
+            2
+          </div>
+<span class="text-[10px] font-black uppercase text-neutral-700 bg-white/80 px-1 rounded mt-1 border border-neutral-900">Lagos &amp; Nieve</span>
+</div>
+</div>
+<!-- WAYPOINT 3 (ACTIVE STOP): Desierto de Atacama & LA BEBI TOKEN -->
+<div class="absolute left-[40%] top-[34%] -translate-x-1/2 -translate-y-1/2 z-20 cursor-pointer">
+<div class="relative flex flex-col items-center">
+<!-- Pulsing Sun Glow Behind Active Stop -->
+<div class="absolute -top-12 w-28 h-28 bg-amber-400/40 rounded-full blur-xl animate-ping pointer-events-none"></div>
+<!-- Active Cartoon Speech Balloon Sign -->
+<div class="bg-amber-400 border-[3px] border-neutral-900 px-3.5 py-1.5 rounded-2xl text-xs md:text-sm font-black comic-shadow -rotate-3 mb-2 flex items-center gap-2 animate-bounce">
+<span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+<span>¡PARADA ACTUAL! 🌵</span>
+</div>
+<!-- Token: LA BEBI CAMPER VAN -->
+<div class="relative group">
+<!-- Cartoon Exhaust Cloud Puff (Animated Feel) -->
+<div class="absolute -left-7 bottom-1 flex items-center gap-1 -rotate-6">
+<span class="text-xs font-black bg-white px-1.5 py-0.5 rounded-full border-2 border-neutral-900 comic-shadow-sm">¡Puf! 💨</span>
+</div>
+<!-- Camper Van Body -->
+<div class="animate-van relative w-20 h-14 bg-amber-400 border-[3px] border-neutral-900 rounded-2xl comic-shadow-lg flex flex-col justify-between p-1.5 overflow-hidden">
+<!-- Van Roof Luggage Rack -->
+<div class="absolute -top-1.5 left-3 right-3 h-2 bg-neutral-900 rounded-full flex justify-around">
+<span class="w-2 h-1.5 bg-orange-500 rounded-sm -mt-1"></span>
+<span class="w-3 h-1.5 bg-sky-400 rounded-sm -mt-1"></span>
+</div>
+<!-- Van Windows & Cartoon Eyes -->
+<div class="flex items-center justify-between pt-1 px-1">
+<div class="w-6 h-5 bg-sky-100 border-2 border-neutral-900 rounded-md flex items-center justify-center">
+<span class="w-1.5 h-1.5 bg-neutral-900 rounded-full"></span>
+</div>
+<div class="w-6 h-5 bg-sky-100 border-2 border-neutral-900 rounded-md flex items-center justify-center">
+<span class="w-1.5 h-1.5 bg-neutral-900 rounded-full"></span>
+</div>
+</div>
+<!-- Grille / Smile & Headlights -->
+<div class="flex items-center justify-between px-1">
+<span class="w-2 h-2 rounded-full bg-white border border-neutral-900"></span>
+<div class="h-1 w-6 bg-neutral-900 rounded-full"></div>
+<span class="w-2 h-2 rounded-full bg-white border border-neutral-900"></span>
+</div>
+</div>
+<!-- Camper Wheels -->
+<div class="flex justify-between px-2 -mt-2 relative z-10">
+<div class="w-5 h-5 rounded-full bg-neutral-900 border-2 border-white flex items-center justify-center">
+<div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+</div>
+<div class="w-5 h-5 rounded-full bg-neutral-900 border-2 border-white flex items-center justify-center">
+<div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+</div>
+</div>
+</div>
+<div class="mt-2 bg-neutral-900 text-amber-400 px-2 py-0.5 rounded-full text-[11px] font-black tracking-wide border-2 border-amber-400 comic-shadow-sm">
+            San Pedro de Atacama
+          </div>
+</div>
+</div>
+<!-- WAYPOINT 4: Salar de Uyuni (Próxima parada) -->
+<div class="absolute left-[38%] top-[17%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="flex flex-col items-center opacity-90 group-hover:opacity-100 transition-opacity">
+<div class="bg-white border-[3px] border-neutral-900 px-3 py-1 rounded-full text-xs font-black comic-shadow-sm rotate-2 mb-1.5 group-hover:scale-105 transition-transform flex items-center gap-1">
+<span>Salar de Uyuni 🦩</span>
+</div>
+<div class="w-9 h-9 rounded-full bg-pink-500 border-[3px] border-neutral-900 comic-shadow flex items-center justify-center text-white font-black text-sm group-hover:rotate-12 transition-transform">
+            4
+          </div>
+<span class="text-[10px] font-bold text-neutral-800 bg-[#FFF6E5] px-1.5 rounded mt-1 border border-neutral-900">Próxima Parada</span>
+</div>
+</div>
+<!-- WAYPOINT 5: Cusco / Machu Picchu (Meta Futura) -->
+<div class="absolute left-[24%] top-[10%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="flex flex-col items-center opacity-75 hover:opacity-100 transition-opacity">
+<div class="bg-white border-[3px] border-neutral-900 px-3 py-1 rounded-full text-xs font-black comic-shadow-sm -rotate-3 mb-1.5 group-hover:scale-105 transition-transform flex items-center gap-1">
+<span>Machu Picchu 🏔️</span>
+</div>
+<div class="w-9 h-9 rounded-full bg-amber-400 border-[3px] border-dashed border-neutral-900 comic-shadow flex items-center justify-center text-neutral-900 font-black text-sm">
+            5
+          </div>
+<span class="text-[10px] font-bold text-neutral-600 bg-white px-1.5 rounded mt-1 border border-dashed border-neutral-900">Meta Final</span>
+</div>
+</div>
+<!-- FLOATING COMIC POLAROID MILESTONE CARD (San Pedro de Atacama Detail) -->
+<div class="absolute right-4 md:right-10 top-6 md:top-8 w-[320px] md:w-[380px] bg-white border-4 border-neutral-900 rounded-3xl comic-shadow-lg z-30 p-4 rotate-1 hover:rotate-0 transition-transform duration-200">
+<!-- Washi Tape Graphics (Top Corner) -->
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 washi-tape-yellow rounded-sm -rotate-2 shadow-sm pointer-events-none flex items-center justify-center">
+<span class="text-[9px] font-black uppercase tracking-wider text-neutral-900">BITÁCORA #119</span>
+</div>
+<!-- Polaroid Header -->
+<div class="flex items-center justify-between mt-2 mb-2">
+<div class="flex items-center gap-1.5">
+<span class="text-xl">✨</span>
+<h2 class="font-headline font-black text-lg md:text-xl text-neutral-900">
+              Atacama: ¡Bajo las estrellas!
+            </h2>
+</div>
+<button class="w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 border-2 border-neutral-900 flex items-center justify-center text-xs font-black">
+            ✕
+          </button>
+</div>
+<!-- Polaroid Photo Frame Style -->
+<div class="bg-[#FFFDF7] p-2.5 border-[3px] border-neutral-900 rounded-2xl comic-shadow-sm mb-3">
+<div class="relative overflow-hidden rounded-xl border-2 border-neutral-900 h-44 group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A vivid comic-style digital photograph of a yellow camper van parked in the Chilean Atacama desert under a spectacular night sky filled with millions of bright stars and the luminous Milky Way. Giant sand dunes roll smoothly in warm earth tones under cool indigo moonlight. Bold illustrated shadows and whimsical comic textures define the landscape, capturing the serene wonder of van-life adventure." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnv6VhV5jFpH8jsJiCDOh3tEk1tQfAmL7QKtAIG-O5By6d9tCbXhvRB7cAOaY73h8uGw4By6gX-obx5nTO4e9WBmJDnHwmJXko3aiDjlfgTwng1BmT2BJEwX2TEBZq59GuMo4fulLZJGYgVxmcHHZjMM7jMgjmUlTk0lfyg1-Cz94hekCI1PrGUNmJ0-nv_j1zFFwZWLYb1A7k6_jmfXJw8hM_cAUbSCVdP9w3skV1XPrt9gZ1xmYIfuRe8wjK2vvsedtJOPMGI1U"/>
+<div class="absolute bottom-2 left-2 bg-neutral-900/90 text-amber-400 font-headline font-black text-[11px] px-2.5 py-1 rounded-full border border-neutral-900">
+              📍 San Pedro de Atacama • 2.408m
+            </div>
+<div class="absolute top-2 right-2 bg-pink-500 text-white font-black text-xs px-2 py-0.5 rounded-full border-2 border-neutral-900 comic-shadow-sm">
+              ❤️ 1.4k
+            </div>
+</div>
+<p class="font-display font-bold text-center text-neutral-700 text-xs mt-2 italic">
+            "Noche #119 en San Pedro: cielo más limpio del mundo 🌌"
+          </p>
+</div>
+<!-- Comic Story Speech Bubble -->
+<div class="relative bg-[#FFF6E5] border-2 border-neutral-900 rounded-2xl p-2.5 text-xs text-neutral-800 font-medium mb-3 leading-relaxed">
+<p>
+<strong class="font-black text-neutral-900">Diario de ruta:</strong> Cruzamos el Paso de Jama a más de 4.000m. La Bebi tosió un poco con la falta de oxígeno pero aguantó como campeona. ¡Hicimos fogata y mate caliente a -2°C!
+          </p>
+</div>
+<!-- Collectible Sticker Badges Row -->
+<div class="flex flex-wrap gap-1.5 mb-3.5">
+<span class="bg-amber-400 border-2 border-neutral-900 text-[11px] font-black px-2 py-0.5 rounded-full comic-shadow-sm">
+            ⭐ Acampada libre
+          </span>
+<span class="bg-sky-400 border-2 border-neutral-900 text-[11px] font-black px-2 py-0.5 rounded-full comic-shadow-sm">
+            ☕ Café a 0°C
+          </span>
+<span class="bg-emerald-500 text-white border-2 border-neutral-900 text-[11px] font-black px-2 py-0.5 rounded-full comic-shadow-sm">
+            💨 Viento superado
+          </span>
+</div>
+<!-- Polaroid Mini Thumbnails Gallery -->
+<div class="grid grid-cols-3 gap-2 mb-3">
+<div class="h-12 rounded-lg border-2 border-neutral-900 overflow-hidden bg-neutral-200">
+<img class="w-full h-full object-cover" data-alt="Close up whimsical illustration of an enamel coffee mug steaming next to the stove of a rustic camper van, with red desert rocks outside the window under a sharp blue comic sky. Warm saturated tones and clean ink outlines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2mHnW9pfbVGhOMY7U4RlUPQMUPg0K2LJrX5FAO2eW5N-xPhrjbMoiWFBIDMGKGg-O-1ocENZPktGPxJTCbUl0jHmqlSP3OOnqgZFF7ycaVeOroggYsFSB4grsXNL2oqx0I2fBq03HYO37tZFc8AJscRmOfhLZO5OIeDyz-S7YTRfJ2xPvNW6-6w3Q2Er6oBvY6VcAIMcxYPQfH7FpQLUbTJVZ5HSWH_aPlrjSMdL4zfAi-cXtiL0hv2FSt0BX6mLtKgpUGpMIsSA"/>
+</div>
+<div class="h-12 rounded-lg border-2 border-neutral-900 overflow-hidden bg-neutral-200">
+<img class="w-full h-full object-cover" data-alt="A wild flamingo foraging calmly in a shallow salty turquoise lagoon in the high altitude desert, flanked by purple mountains in a playful cartoon art style with vibrant saturated watercolors and ink borders." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQnj5qNn5_3nM4eSlt0uJHMEnarFY-1ZsYPagt9elJNyMWofLOaFOSxngAlWAL_jrLdhKotcPnf41v3jWtEySKzqgj8HacC0myjQp10NdLc1p4YAqRrONREocCqHVO2G9JvwDFP05pyf35QhlMm7IK0EmwsTSGPJm35fZkYaqRGmSDu1RJ-2MM0iufBA0S8QowBqCZkzbsf2wRZyeI89F1gGszxHSyA9w0VkzL3JWKGS2WZ4cyxGJgoJ77-fwSf-8QJT6SGlwZ0-I"/>
+</div>
+<div class="h-12 rounded-lg border-2 border-neutral-900 overflow-hidden bg-neutral-200 flex items-center justify-center bg-amber-400 font-headline font-black text-xs text-neutral-900">
+            +10 Fotos
+          </div>
+</div>
+<!-- Quick Action Comic Buttons -->
+<div class="grid grid-cols-2 gap-2">
+<button class="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-headline font-black text-xs py-2 px-2 rounded-xl comic-shadow-sm text-center transition-all flex items-center justify-center gap-1">
+<span>Leer bitácora</span>
+<span>📖</span>
+</button>
+<button class="w-full bg-amber-400 hover:bg-amber-500 text-neutral-900 border-2 border-neutral-900 font-headline font-black text-xs py-2 px-2 rounded-xl comic-shadow-sm text-center transition-all flex items-center justify-center gap-1">
+<span>Ver 12 fotos</span>
+<span>📸</span>
+</button>
+</div>
+</div>
+<!-- MAP CONTROLS & ADVENTURE COMPASS ROSE (Bottom-Left / Left Canvas) -->
+<div class="absolute left-6 bottom-24 flex flex-col items-center gap-3 z-20">
+<!-- Whimsical Comic Compass Rose -->
+<div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white border-[3px] border-neutral-900 comic-shadow flex items-center justify-center relative rotate-12">
+<div class="absolute -top-2 text-[10px] font-black bg-amber-400 px-1 rounded border border-neutral-900">N</div>
+<span class="material-symbols-outlined text-2xl text-orange-500 font-black" data-icon="explore">explore</span>
+<div class="absolute -bottom-1.5 text-[8px] font-black text-neutral-600">SUR</div>
+</div>
+<!-- Arcade Comic Map Controls (+, -, Recenter) -->
+<div class="flex flex-col bg-white border-[3px] border-neutral-900 rounded-2xl comic-shadow p-1 gap-1">
+<button class="w-9 h-9 rounded-xl hover:bg-amber-400 border border-transparent hover:border-neutral-900 flex items-center justify-center font-black text-lg transition-colors" title="Zoom in">
+            +
+          </button>
+<div class="h-0.5 bg-neutral-200 w-full"></div>
+<button class="w-9 h-9 rounded-xl hover:bg-amber-400 border border-transparent hover:border-neutral-900 flex items-center justify-center font-black text-lg transition-colors" title="Zoom out">
+            −
+          </button>
+<div class="h-0.5 bg-neutral-200 w-full"></div>
+<button class="w-9 h-9 rounded-xl hover:bg-sky-400 border border-transparent hover:border-neutral-900 flex items-center justify-center transition-colors" title="Re-centrar en La Bebi">
+<span class="material-symbols-outlined text-sm font-black" data-icon="my_location">my_location</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BOTTOM INTERACTIVE TIMELINE SCRUBBER & DASHBOARD DOCK -->
+<footer class="docked full-width bottom z-40 bg-white dark:bg-neutral-900 border-t-4 border-neutral-900 dark:border-neutral-800 shadow-[0_-4px_0px_0px_rgba(31,42,68,1)]">
+<div class="w-full py-3 md:py-4 px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 md:gap-6">
+<!-- Left: Interactive Play Controller & Status Badge -->
+<div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+<!-- Big Arcade Play Button -->
+<button class="bg-amber-400 hover:bg-amber-500 text-neutral-900 border-[3px] border-neutral-900 rounded-2xl p-2.5 md:p-3 comic-shadow comic-shadow-hover flex items-center gap-2 group active:translate-y-1">
+<span class="material-symbols-outlined text-2xl font-black" data-icon="play_arrow">play_arrow</span>
+<span class="font-headline font-black text-xs md:text-sm uppercase tracking-wide pr-1">REPRODUCIR RUTA</span>
+</button>
+<!-- Current Status Chip -->
+<div class="bg-[#FFF6E5] border-2 border-neutral-900 rounded-2xl px-3 py-1.5 comic-shadow-sm flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+<div class="text-left">
+<div class="text-[10px] font-bold text-neutral-500 uppercase leading-none">GPS En Vivo</div>
+<div class="text-xs font-black text-neutral-900 truncate max-w-[170px] sm:max-w-none">
+              San Pedro de Atacama (2.408m)
+            </div>
+</div>
+</div>
+</div>
+<!-- Center: Tire-Track Timeline Scrubber -->
+<div class="flex-1 w-full max-w-2xl px-2">
+<div class="flex justify-between items-center text-xs font-black text-neutral-700 mb-1.5">
+<span class="flex items-center gap-1">
+<span>🏁 Buenos Aires</span>
+</span>
+<span class="bg-orange-500 text-white px-2 py-0.5 rounded-full border border-neutral-900 text-[10px] font-black">
+            68% COMPLETADO
+          </span>
+<span class="text-neutral-500">
+            🏔️ Machu Picchu
+          </span>
+</div>
+<!-- Scrubber Bar Track -->
+<div class="relative h-6 w-full bg-neutral-200 border-[3px] border-neutral-900 rounded-full overflow-visible flex items-center p-0.5">
+<!-- Filled Progress with Tire Tread Pattern -->
+<div class="h-full w-[68%] tire-treads rounded-l-full relative flex items-center justify-end">
+<!-- Scrubber Thumb (Mini Van Wheel) -->
+<div class="absolute -right-3.5 w-7 h-7 bg-amber-400 border-[3px] border-neutral-900 rounded-full comic-shadow flex items-center justify-center cursor-grab active:cursor-grabbing hover:scale-110 transition-transform">
+<span class="text-[10px]">🚐</span>
+</div>
+</div>
+<!-- Milestones Checkpoints Dots on Track -->
+<div class="absolute inset-0 flex justify-between items-center px-4 pointer-events-none">
+<!-- Dot 1 -->
+<div class="w-2.5 h-2.5 rounded-full bg-neutral-900" title="Km 0"></div>
+<!-- Dot 2 -->
+<div class="w-2.5 h-2.5 rounded-full bg-neutral-900" title="Km 4.200"></div>
+<!-- Dot 3 (Current) -->
+<div class="w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-neutral-900" title="Km 15.420"></div>
+<!-- Dot 4 (Future) -->
+<div class="w-2.5 h-2.5 rounded-full bg-white border border-neutral-500" title="Salar de Uyuni"></div>
+<!-- Dot 5 (Goal) -->
+<div class="w-2.5 h-2.5 rounded-full bg-white border border-neutral-500" title="Machu Picchu"></div>
+</div>
+</div>
+</div>
+<!-- Right: Footer Links / Shared Anchors -->
+<div class="flex items-center gap-3 w-full md:w-auto justify-end">
+<a class="text-xs font-black text-neutral-800 hover:text-orange-500 hover:underline flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+<span>Ruta GPX</span>
+</a>
+<button class="bg-pink-500 text-white font-headline font-black text-xs px-3 py-1.5 rounded-full border-2 border-neutral-900 comic-shadow-sm hover:scale-105 active:scale-95 transition-transform flex items-center gap-1">
+<span>❤️ Apoyar el Viaje</span>
+</button>
+</div>
+</div>
+</footer>
+</body></html>
