@@ -367,11 +367,8 @@ export default function InteractiveMap() {
     const bebiIcon = L.divIcon({
       className: '',
       html: `
-        <div id="bebi-marker-wrapper" style="width:130px;height:130px;position:relative;cursor:pointer;" title="🚐 La Bebi 3D • Toyota Hilux Camper (¡Click para rotar 360°!)">
+        <div id="bebi-marker-wrapper" style="width:130px;height:130px;position:relative;cursor:pointer;">
           <div id="bebi-three-canvas-slot" style="width:130px;height:130px;pointer-events:none;"></div>
-          <div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);background:#1F2A44;color:#FFC93C;font-family:'Baloo 2',sans-serif;font-size:10px;font-weight:900;padding:2px 8px;border-radius:999px;border:2px solid #FFC93C;white-space:nowrap;box-shadow:2px 2px 0 #1F2A44;pointer-events:none;">
-            🚐 La Bebi 3D
-          </div>
         </div>
       `,
       iconSize: [130, 130],
