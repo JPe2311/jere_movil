@@ -4,12 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as THREE from 'three';
-import { animate, motion, useMotionValue } from 'framer-motion';
+import { AnimatePresence, animate, motion, useMotionValue } from 'framer-motion';
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useCollection } from '@/lib/useCollection';
 import { demoPuntos } from '@/lib/demoData';
-import { toMillis } from '@/lib/utils';
+import { formatDateTime, toMillis } from '@/lib/utils';
 import { CATEGORIAS_PUNTOS, LISTA_CATEGORIAS } from '@/lib/categories';
 import { ordenarPuntos } from '@/lib/orden';
+import { embedDeYouTube } from '@/lib/enVivo';
+import { crearObjetivo, borrarObjetivo, obtenerObjetivos } from '@/lib/objetivos';
 import { useI18n } from '@/lib/i18n';
 import { buildFullRoadPath } from '@/lib/routing';
 import TimelineSlider from './TimelineSlider';
@@ -161,6 +165,7 @@ export default function InteractiveMap() {
   }, [puntos]);
 
   const toggleCat = useCallback((id) => {
+    setElegir(null);
     setActivas((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -168,7 +173,44 @@ export default function InteractiveMap() {
       return next;
     });
   }, []);
-  const activarTodas = useCallback(() => setActivas(new Set(LISTA_CATEGORIAS.map((c) => c.id))), []);
+  const activarTodas = useCallback(() => {
+    setElegir(null);
+    setActivas(new Set(LISTA_CATEGORIAS.map((c) => c.id)));
+  }, []);
+
+  // ---------- Evento EN VIVO (seguimiento del admin en tiempo real) ----------
+  const { items: eventos } = useCollection('eventos_en_vivo', 'inicio', 'asc');
+  const enVivo = useMemo(() => {
+    const activos = eventos.filter((e) => e?.estado === 'activo');
+    return activos.length ? activos[activos.length - 1] : null;
+  }, [eventos]);
+
+  const [track, setTrack] = useState([]);
+  useEffect(() => {
+    if (!db || !enVivo?.id) {
+      setTrack([]);
+      return undefined;
+    }
+    const q = query(collection(db, 'eventos_en_vivo', enVivo.id, 'track'), orderBy('ts', 'asc'));
+    return onSnapshot(
+      q,
+      (snap) => setTrack(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (err) => console.error('[en vivo]', err)
+    );
+  }, [enVivo?.id]);
+
+  // Pines encimados: un solo botón que abre el selector de eventos
+  const [elegir, setElegir] = useState(null);
+
+  // ---------- Objetivos en el mapa (bandera 🏁) ----------
+  const { items: objetivos, loading: objetivosLoading } = useCollection('objetivos', 'creado', 'desc');
+
+  // Modo "agregar objetivo": al hacer click en el mapa se crea un objetivo en esa posición
+  const [agregandoObjetivo, setAgregandoObjetivo] = useState(false);
+  const [objetivoModal, setObjetivoModal] = useState(null); // { lat, lng } del objetivo a crear
+  const [objetivoTitulo, setObjetivoTitulo] = useState('');
+  const [objetivoDescripcion, setObjetivoDescripcion] = useState('');
+
 
   // Rango del timeline
   const { start, end } = useMemo(() => {
@@ -298,6 +340,7 @@ export default function InteractiveMap() {
     (id, { fly = true } = {}) => {
       const p = puntos.find((x) => x.id === id);
       if (!p) return;
+      setElegir(null);
       tweenTo(p);
       setSelectedId(id);
       const map = mapRef.current;
@@ -445,35 +488,198 @@ export default function InteractiveMap() {
     };
   }, [puntos, roadPath]);
 
-  /* ---------- 2.1) Pines de la bitácora: numerados y coloreados por categoría ---------- */
+  /* ---------- 2.1) Pines de la bitácora: agrupa los que quedan encimados ---------- */
+  const [grupos, setGrupos] = useState([]);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !visibles.length) return undefined;
+    if (!map || !visibles.length) {
+      setGrupos([]);
+      return undefined;
+    }
+
+    // Agrupa los pines que caen a menos de 24px uno del otro (varía con el zoom)
+    const calcular = () => {
+      const salida = [];
+      visibles.forEach((p) => {
+        const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+        const g = salida.find((x) => Math.hypot(x.x - pt.x, x.y - pt.y) < 24);
+        if (g) g.puntos.push(p);
+        else salida.push({ x: pt.x, y: pt.y, puntos: [p] });
+      });
+      setGrupos(salida);
+    };
+
+    calcular();
+    map.on('moveend', calcular);
+    map.on('zoomend', calcular);
+    return () => {
+      map.off('moveend', calcular);
+      map.off('zoomend', calcular);
+    };
+  }, [visibles]);
+
+  /* ---------- 2.1.1) Dibuja los pines (o un botón stack si hay encimados) ---------- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !grupos.length) return undefined;
 
     const group = L.layerGroup().addTo(map);
-    visibles.forEach((p) => {
-      const cat = CATEGORIAS_PUNTOS[catDe(p)] || CATEGORIAS_PUNTOS.importante;
-      const n = numeros.get(p.id) ?? 0;
-      const sel = p.id === selectedId;
+    const cerrarSelector = () => setElegir(null);
+    map.on('click', cerrarSelector);
+
+    grupos.forEach((g) => {
+      // Un solo punto: el pin de siempre
+      if (g.puntos.length === 1) {
+        const p = g.puntos[0];
+        const cat = CATEGORIAS_PUNTOS[catDe(p)] || CATEGORIAS_PUNTOS.importante;
+        const n = numeros.get(p.id) ?? 0;
+        const sel = p.id === selectedId;
+        const icon = L.divIcon({
+          className: '',
+          html: `<div class="hito-pin${sel ? ' is-sel' : ''}" style="background:${cat.pinBg};color:${cat.textColor}">${n}</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+        L.marker([p.lat, p.lng], {
+          icon,
+          title: `${n}. ${cat.emoji} ${p.ciudad || p.titulo || ''}`,
+          zIndexOffset: sel ? 400 : 0,
+        })
+          .on('click', () => pickRef.current(p.id, { fly: false }))
+          .addTo(group);
+        return;
+      }
+
+      // Varios puntos encimados: un solo botón que abre el selector
+      const latlng = map.containerPointToLatLng([g.x, g.y]);
       const icon = L.divIcon({
         className: '',
-        html: `<div class="hito-pin${sel ? ' is-sel' : ''}" style="background:${cat.pinBg};color:${cat.textColor}">${n}</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
+        html: `<div class="hito-pin hito-stack">${g.puntos.length}</div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
       });
-      L.marker([p.lat, p.lng], {
+      L.marker(latlng, {
         icon,
-        title: `${n}. ${cat.emoji} ${p.ciudad || p.titulo || ''}`,
-        zIndexOffset: sel ? 400 : 0,
+        title: `${g.puntos.length} puntos juntos — hacé clic para elegir`,
+        zIndexOffset: 500,
       })
-        .on('click', () => pickRef.current(p.id, { fly: false }))
+        .on('click', () => setElegir({ puntos: g.puntos }))
         .addTo(group);
     });
 
     return () => {
+      map.off('click', cerrarSelector);
       group.remove();
     };
-  }, [visibles, numeros, selectedId]);
+  }, [grupos, numeros, selectedId]);
+
+  /* ---------- 2.2) Objetivos en el mapa: bandera 🏁 ---------- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !objetivos?.length) return undefined;
+
+    const layer = L.layerGroup().addTo(map);
+    const cerrarAgregar = () => setAgregandoObjetivo(false);
+
+    objetivos.forEach((o) => {
+      if (!Number.isFinite(o?.lat) || !Number.isFinite(o?.lng)) return;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="objetivo-pin" style="font-size:20px; line-height:1;">🏁</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+      });
+      const marker = L.marker([o.lat, o.lng], {
+        icon,
+        title: `🏁 ${o.titulo || 'Objetivo'}`,
+        zIndexOffset: 600,
+      })
+        .on('click', () => {
+          map.flyTo([o.lat, o.lng], Math.max(map.getZoom(), 7), { duration: 1 });
+        })
+        .addTo(layer);
+
+      // Popup con info del objetivo
+      marker.bindPopup(
+        `<div style="min-width:180px;">
+          <div style="font-weight:800; font-family:'Baloo 2',sans-serif;">🏁 ${o.titulo || 'Objetivo'}</div>
+          ${o.descripcion ? `<div style="font-size:0.9rem; margin-top:4px; color:#1F2A44;">${o.descripcion}</div>` : ''}
+          <div style="margin-top:6px; font-size:0.75rem; color:#1F2A44/70;">
+            ${o.lat.toFixed(4)}, ${o.lng.toFixed(4)}
+          </div>
+        </div>`
+      );
+    });
+
+    // Modo agregar objetivo: click en el mapa abre formulario rápido
+    if (agregandoObjetivo) {
+      map.on('click', (e) => {
+        setObjetivoModal({ lat: e.latlng.lat, lng: e.latlng.lng });
+        setAgregandoObjetivo(false);
+      });
+      map.on('click', cerrarAgregar);
+    }
+
+    return () => {
+      layer.remove();
+      if (agregandoObjetivo) {
+        map.off('click', cerrarAgregar);
+      }
+    };
+  }, [objetivos, agregandoObjetivo, objetivoModal]);
+
+  /* ---------- 2.3) Evento en vivo: recorrido en tiempo real del admin ---------- */
+  const panVivoRef = useRef(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !enVivo) return undefined;
+
+    const coords = track
+      .filter((p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lng))
+      .map((p) => [p.lat, p.lng]);
+    const posActual =
+      Number.isFinite(enVivo?.lat) && Number.isFinite(enVivo?.lng)
+        ? [enVivo.lat, enVivo.lng]
+        : null;
+    const lineas = coords.length ? coords : posActual ? [posActual] : [];
+    if (!lineas.length) return undefined;
+
+    const layer = L.layerGroup().addTo(map);
+
+    if (lineas.length > 1) {
+      // Sombra debajo + línea punteada "seguimiento"
+      L.polyline(lineas, { color: '#1F2A44', weight: 9, opacity: 0.18 }).addTo(layer);
+      L.polyline(lineas, {
+        color: '#FF3B6B',
+        weight: 5,
+        opacity: 0.95,
+        dashArray: '1 12',
+        lineCap: 'round',
+      }).addTo(layer);
+    }
+
+    const latlng = lineas[lineas.length - 1];
+    L.marker(latlng, {
+      icon: L.divIcon({
+        className: '',
+        html: '<div class="live-pin"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      }),
+      zIndexOffset: 700,
+      title: `📍 ${enVivo.titulo || 'En vivo'}`,
+    }).addTo(layer);
+
+    // Centra el mapa solo la primera vez que aparece cada evento
+    if (panVivoRef.current !== enVivo.id) {
+      panVivoRef.current = enVivo.id;
+      map.panTo(latlng, { animate: true, duration: 0.9 });
+    }
+
+    return () => {
+      layer.remove();
+    };
+  }, [enVivo, track]);
 
   /* ---------- 3) El timeline mueve a La Bebi siguiendo las curvas de la carretera ---------- */
   const update = useCallback(
@@ -621,6 +827,10 @@ export default function InteractiveMap() {
               🧪 {t('map_demo')}
             </motion.div>
           )}
+          {/* Botón para agregar objetivo en el mapa */}
+          <button type="button" onClick={() => setAgregandoObjetivo(true)} className="rounded-full border-2 border-noche px-3 py-1 text-xs font-extrabold shadow-comic-sm backdrop-blur-sm transition ${agregandoObjetivo ? 'bg-rosa shadow-comic' : 'bg-white'}" aria-label={t('map_add_objetivo')} title={t('map_add_objetivo')}>
+            {agregandoObjetivo ? '✅' : '🏁'} {t('map_add_objetivo_short')}
+          </button>
         </div>
 
         {/* Buscador de ciudades (derecha) */}
@@ -697,6 +907,81 @@ export default function InteractiveMap() {
 
       {/* Modal Visor 3D de "La Bebi" con Three.js */}
       <CamperModalViewer isOpen={show3DModal} onClose={() => setShow3DModal(false)} />
+
+      {/* Modal para crear objetivo */}
+      {objetivoModal && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-noche/80 p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="card-comic p-6 sm:p-8 max-w-sm w-full border-[3px] border-noche shadow-2xl"
+          >
+            <h2 className="font-display text-2xl font-extrabold text-center mb-4">🏁 Nuevo objetivo</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-noche/70 mb-1">{t('map_add_objetivo_titulo')}</label>
+                <input
+                  type="text"
+                  value={objetivoTitulo}
+                  onChange={(e) => setObjetivoTitulo(e.target.value)}
+                  placeholder="Ej: Machu Picchu"
+                  className="w-full rounded-2xl border-2 border-noche bg-white px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-sol/60"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-noche/70 mb-1">{t('map_add_objetivo_desc')}</label>
+                <textarea
+                  value={objetivoDescripcion}
+                  onChange={(e) => setObjetivoDescripcion(e.target.value)}
+                  placeholder="Descripción opcional del objetivo"
+                  rows={2}
+                  className="w-full rounded-2xl border-2 border-noche bg-white px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-sol/60"
+                />
+              </div>
+              <div className="text-xs font-bold text-noche/60 text-center">
+                {objetivoModal.lat.toFixed(4)}, {objetivoModal.lng.toFixed(4)}
+              </div>
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setObjetivoModal(null);
+                  setObjetivoTitulo('');
+                  setObjetivoDescripcion('');
+                }}
+                className="flex-1 px-4 py-2 rounded-full border-2 border-noche bg-white text-noche font-bold hover:bg-crema"
+              >
+                {t('map_add_objetivo_cancelar')}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!objetivoTitulo.trim()) return;
+                  try {
+                    await crearObjetivo({
+                      titulo: objetivoTitulo.trim(),
+                      descripcion: objetivoDescripcion.trim(),
+                      lat: objetivoModal.lat,
+                      lng: objetivoModal.lng,
+                    });
+                    setObjetivoModal(null);
+                    setObjetivoTitulo('');
+                    setObjetivoDescripcion('');
+                  } catch (err) {
+                    console.error(err);
+                    alert('No se pudo crear el objetivo');
+                  }
+                }}
+                className="flex-1 px-4 py-2 rounded-full border-2 border-noche bg-cielo text-white font-bold shadow-comic-sm hover:bg-cielo/90"
+              >
+                {t('map_add_objetivo_crear')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

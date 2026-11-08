@@ -13,6 +13,7 @@ import { formatDateTime, toMillis } from '@/lib/utils';
 import { CATEGORIAS_PUNTOS, LISTA_CATEGORIAS } from '@/lib/categories';
 import { ordenarPuntos } from '@/lib/orden';
 import { embedDeYouTube } from '@/lib/enVivo';
+import { crearObjetivo, borrarObjetivo, obtenerObjetivos } from '@/lib/objetivos';
 import { useI18n } from '@/lib/i18n';
 import { buildFullRoadPath } from '@/lib/routing';
 import TimelineSlider from './TimelineSlider';
@@ -200,6 +201,16 @@ export default function InteractiveMap() {
 
   // Pines encimados: un solo botón que abre el selector de eventos
   const [elegir, setElegir] = useState(null);
+
+  // ---------- Objetivos en el mapa (bandera 🏁) ----------
+  const { items: objetivos, loading: objetivosLoading } = useCollection('objetivos', 'creado', 'desc');
+
+  // Modo "agregar objetivo": al hacer click en el mapa se crea un objetivo en esa posición
+  const [agregandoObjetivo, setAgregandoObjetivo] = useState(false);
+  const [objetivoModal, setObjetivoModal] = useState(null); // { lat, lng } del objetivo a crear
+  const [objetivoTitulo, setObjetivoTitulo] = useState('');
+  const [objetivoDescripcion, setObjetivoDescripcion] = useState('');
+
 
   // Rango del timeline
   const { start, end } = useMemo(() => {
@@ -562,7 +573,62 @@ export default function InteractiveMap() {
     };
   }, [grupos, numeros, selectedId]);
 
-  /* ---------- 2.2) Evento en vivo: recorrido en tiempo real del admin ---------- */
+  /* ---------- 2.2) Objetivos en el mapa: bandera 🏁 ---------- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !objetivos?.length) return undefined;
+
+    const layer = L.layerGroup().addTo(map);
+    const cerrarAgregar = () => setAgregandoObjetivo(false);
+
+    objetivos.forEach((o) => {
+      if (!Number.isFinite(o?.lat) || !Number.isFinite(o?.lng)) return;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="objetivo-pin" style="font-size:20px; line-height:1;">🏁</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+      });
+      const marker = L.marker([o.lat, o.lng], {
+        icon,
+        title: `🏁 ${o.titulo || 'Objetivo'}`,
+        zIndexOffset: 600,
+      })
+        .on('click', () => {
+          map.flyTo([o.lat, o.lng], Math.max(map.getZoom(), 7), { duration: 1 });
+        })
+        .addTo(layer);
+
+      // Popup con info del objetivo
+      marker.bindPopup(
+        `<div style="min-width:180px;">
+          <div style="font-weight:800; font-family:'Baloo 2',sans-serif;">🏁 ${o.titulo || 'Objetivo'}</div>
+          ${o.descripcion ? `<div style="font-size:0.9rem; margin-top:4px; color:#1F2A44;">${o.descripcion}</div>` : ''}
+          <div style="margin-top:6px; font-size:0.75rem; color:#1F2A44/70;">
+            ${o.lat.toFixed(4)}, ${o.lng.toFixed(4)}
+          </div>
+        </div>`
+      );
+    });
+
+    // Modo agregar objetivo: click en el mapa abre formulario rápido
+    if (agregandoObjetivo) {
+      map.on('click', (e) => {
+        setObjetivoModal({ lat: e.latlng.lat, lng: e.latlng.lng });
+        setAgregandoObjetivo(false);
+      });
+      map.on('click', cerrarAgregar);
+    }
+
+    return () => {
+      layer.remove();
+      if (agregandoObjetivo) {
+        map.off('click', cerrarAgregar);
+      }
+    };
+  }, [objetivos, agregandoObjetivo, objetivoModal]);
+
+  /* ---------- 2.3) Evento en vivo: recorrido en tiempo real del admin ---------- */
   const panVivoRef = useRef(null);
   useEffect(() => {
     const map = mapRef.current;
@@ -761,6 +827,10 @@ export default function InteractiveMap() {
               🧪 {t('map_demo')}
             </motion.div>
           )}
+          {/* Botón para agregar objetivo en el mapa */}
+          <button type="button" onClick={() => setAgregandoObjetivo(true)} className="rounded-full border-2 border-noche px-3 py-1 text-xs font-extrabold shadow-comic-sm backdrop-blur-sm transition ${agregandoObjetivo ? 'bg-rosa shadow-comic' : 'bg-white'}" aria-label={t('map_add_objetivo')} title={t('map_add_objetivo')}>
+            {agregandoObjetivo ? '✅' : '🏁'} {t('map_add_objetivo_short')}
+          </button>
         </div>
 
         {/* Buscador de ciudades (derecha) */}
@@ -837,6 +907,81 @@ export default function InteractiveMap() {
 
       {/* Modal Visor 3D de "La Bebi" con Three.js */}
       <CamperModalViewer isOpen={show3DModal} onClose={() => setShow3DModal(false)} />
+
+      {/* Modal para crear objetivo */}
+      {objetivoModal && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-noche/80 p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="card-comic p-6 sm:p-8 max-w-sm w-full border-[3px] border-noche shadow-2xl"
+          >
+            <h2 className="font-display text-2xl font-extrabold text-center mb-4">🏁 Nuevo objetivo</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-noche/70 mb-1">{t('map_add_objetivo_titulo')}</label>
+                <input
+                  type="text"
+                  value={objetivoTitulo}
+                  onChange={(e) => setObjetivoTitulo(e.target.value)}
+                  placeholder="Ej: Machu Picchu"
+                  className="w-full rounded-2xl border-2 border-noche bg-white px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-sol/60"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-noche/70 mb-1">{t('map_add_objetivo_desc')}</label>
+                <textarea
+                  value={objetivoDescripcion}
+                  onChange={(e) => setObjetivoDescripcion(e.target.value)}
+                  placeholder="Descripción opcional del objetivo"
+                  rows={2}
+                  className="w-full rounded-2xl border-2 border-noche bg-white px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-sol/60"
+                />
+              </div>
+              <div className="text-xs font-bold text-noche/60 text-center">
+                {objetivoModal.lat.toFixed(4)}, {objetivoModal.lng.toFixed(4)}
+              </div>
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setObjetivoModal(null);
+                  setObjetivoTitulo('');
+                  setObjetivoDescripcion('');
+                }}
+                className="flex-1 px-4 py-2 rounded-full border-2 border-noche bg-white text-noche font-bold hover:bg-crema"
+              >
+                {t('map_add_objetivo_cancelar')}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!objetivoTitulo.trim()) return;
+                  try {
+                    await crearObjetivo({
+                      titulo: objetivoTitulo.trim(),
+                      descripcion: objetivoDescripcion.trim(),
+                      lat: objetivoModal.lat,
+                      lng: objetivoModal.lng,
+                    });
+                    setObjetivoModal(null);
+                    setObjetivoTitulo('');
+                    setObjetivoDescripcion('');
+                  } catch (err) {
+                    console.error(err);
+                    alert('No se pudo crear el objetivo');
+                  }
+                }}
+                className="flex-1 px-4 py-2 rounded-full border-2 border-noche bg-cielo text-white font-bold shadow-comic-sm hover:bg-cielo/90"
+              >
+                {t('map_add_objetivo_crear')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
