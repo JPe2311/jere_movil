@@ -551,7 +551,10 @@ export default function InteractiveMap() {
         title: `${g.puntos.length} puntos juntos — hacé clic para elegir`,
         zIndexOffset: 500,
       })
-        .on('click', () => setElegir({ puntos: g.puntos }))
+        .on('click', (e) => {
+          e.originalEvent.stopPropagation(); // evita que el mapa cierre el selector
+          setElegir({ puntos: g.puntos });
+        })
         .addTo(group);
     });
 
