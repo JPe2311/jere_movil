@@ -55,5 +55,23 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Objetivos en el mapa (banderas 🏁): lectura pública, escritura solo admin
+    match /objetivos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Eventos en vivo (seguimiento GPS del admin): lectura pública, escritura solo admin
+    match /eventos_en_vivo/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Puntos del recorrido (track) del evento en vivo
+      match /track/{trackId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
   }
 }

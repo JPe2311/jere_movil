@@ -11,14 +11,12 @@ service cloud.firestore {
         get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Perfil de usuario. El rol "admin" se asigna a mano desde la consola de Firebase.
     match /usuarios/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
       allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
       allow update: if isAdmin();
     }
 
-    // Contenido público, solo el admin escribe
     match /puntos_mapa/{id} {
       allow read: if true;
       allow write: if isAdmin();
@@ -33,7 +31,6 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
 
-      // Comentarios: lectura pública, escribir requiere sesión
       match /comentarios/{commentId} {
         allow read: if true;
         allow create: if isSignedIn()
@@ -45,8 +42,16 @@ service cloud.firestore {
       }
     }
 
-    // Recursos: la ficha es pública (vidriera), el archivo/enlace real es privado
     match /recursos/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+
+      match /descargas/{downloadId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /configuracion/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
@@ -67,11 +72,6 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isAdmin();
       }
-    }
-
-    match /recursos_privados/{id} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
     }
   }
 }

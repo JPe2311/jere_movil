@@ -13,6 +13,7 @@ import { Field, Notice, Panel } from './ui';
 export default function ObjetivosAdmin() {
   const [objetivos, setObjetivos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [msg, setMsg] = useState({ text: '', tone: 'error' });
 
   // Formulario de agregar/editar
@@ -64,6 +65,104 @@ export default function ObjetivosAdmin() {
     skip.current = true;
     setQ(r.display_name);
     setResults([]);
+  }
+
+  async function cargar() {
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const data = await obtenerObjetivos();
+      setObjetivos(data);
+    } catch (err) {
+      console.error('[objetivos] error cargando:', err);
+      setLoadError(err.message || 'Error al cargar objetivos');
+      setObjetivos([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    cargar();
+  }, []);
+
+  function abrirNuevo() {
+    setEditId(null);
+    setTitulo('');
+    setDescripcion('');
+    setLat('');
+    setLng('');
+    setAbierto(true);
+  }
+
+  function editar(o) {
+    setEditId(o.id);
+    setTitulo(o.titulo || '');
+    setDescripcion(o.descripcion || '');
+    setLat(String(o.lat ?? ''));
+    setLng(String(o.lng ?? ''));
+    setAbierto(true);
+  }
+
+  async function guardar() {
+    if (!titulo.trim()) {
+      setMsg({ text: 'El título es obligatorio', tone: 'error' });
+      return;
+    }
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
+      setMsg({ text: 'Latitud y longitud deben ser números válidos', tone: 'error' });
+      return;
+    }
+    try {
+      if (editId) {
+        await actualizarObjetivo(editId, { titulo: titulo.trim(), descripcion: descripcion.trim(), lat: latNum, lng: lngNum });
+      } else {
+        await crearObjetivo({ titulo: titulo.trim(), descripcion: descripcion.trim(), lat: latNum, lng: lngNum });
+      }
+      setAbierto(false);
+      setMsg({ text: editId ? 'Objetivo actualizado ✅' : 'Objetivo creado ✅', tone: 'ok' });
+      await cargar();
+    } catch (err) {
+      setMsg({ text: err.message, tone: 'error' });
+    }
+  }
+
+  async function eliminar(id) {
+    if (!window.confirm('¿Borrar este objetivo?')) return;
+    try {
+      await borrarObjetivo(id);
+      setMsg({ text: 'Objetivo borrado 🗑', tone: 'ok' });
+      await cargar();
+    } catch (err) {
+      setMsg({ text: err.message, tone: 'error' });
+    }
+  }
+
+  // Si falló la carga, mostrar botón de reintentar
+  if (loadError) {
+    return (
+      <Panel title="🏁 Objetivos del mapa">
+        <p className="text-sm font-semibold">
+          Los objetivos aparecen en el mapa con una bandera 🏁. Son puntos de referencia
+          que no forman parte de la ruta cronológica (ej: Machu Picchu).
+        </p>
+        <div className="p-4 rounded-xl border-2 border-noche bg-rosa/20 text-noche/70">
+          <p className="text-sm font-bold">No se pudieron cargar los objetivos</p>
+          <p className="text-xs mt-1">{loadError}</p>
+        </div>
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={cargar}
+            className="btn btn-sol"
+          >
+            🔄 Reintentar
+          </button>
+        </div>
+      </Panel>
+    );
   }
 
   if (loading) {
