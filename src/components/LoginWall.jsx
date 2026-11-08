@@ -67,7 +67,7 @@ export default function LoginWall({ compact = false }) {
           </button>
           {!termsAccepted && (
             <p className="mt-2 text-xs font-bold text-atardecer">
-              {t('auth_demo')}
+              Para continuar necesitás aceptar los Términos y Condiciones.
             </p>
           )}
         </div>

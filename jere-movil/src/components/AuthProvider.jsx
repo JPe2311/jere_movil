@@ -10,12 +10,13 @@ const AuthContext = createContext({
   role: 'user',
   isAdmin: false,
   loading: true,
-  // Inicializamos configured en true para evitar errores SSR;
-  // el useEffect abajo lo actualizará al valor real en el cliente.
-  configured: true,
+  configured: false,
   termsAccepted: false,
   youtubeSubscribed: false,
   instagramSubscribed: false,
+  login: async () => {},
+  logout: async () => {},
+  error: null,
 });
 
 export function AuthProvider({ children }) {
@@ -26,31 +27,39 @@ export function AuthProvider({ children }) {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [youtubeSubscribed, setYoutubeSubscribed] = useState(false);
   const [instagramSubscribed, setInstagramSubscribed] = useState(false);
-  // Estado de configuración: empieza en true para evitar errores SSR;
-  // el useEffect lo actualiza al valor real después del primer render.
-  const [isClientConfigured, setIsClientConfigured] = useState(true);
+  const [isClientConfigured, setIsClientConfigured] = useState(isFirebaseConfigured());
 
+  // Verificar si Firebase tiene credenciales en el cliente (solo una vez)
   useEffect(() => {
-    // Verificamos en el cliente si Firebase tiene las credenciales mínimas.
-    // Usamos process.env que está disponible solo en el cliente después del primer render.
     try {
       setIsClientConfigured(!!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID));
     } catch {
       setIsClientConfigured(false);
     }
-    // Después de verificar, actualizamos el estado 'configured' del contexto.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Suscribirse a auth state change SIEMPRE que auth exista
   useEffect(() => {
-    if (!isClientConfigured) {
-      setLoading(false);
-      return;
-    }
     if (!auth || !db) {
+      // Firebase no configurado: modo demo sin mensaje, permitir login local
       setLoading(false);
+      // Intentar restaurar sesión desde localStorage
+      try {
+        const saved = localStorage.getItem('jere_demo_user');
+        if (saved) {
+          const u = JSON.parse(saved);
+          setUser(u);
+          setRole(u.role || 'user');
+          setTermsAccepted(u.termsAccepted || false);
+          setYoutubeSubscribed(u.youtubeSubscribed || false);
+          setInstagramSubscribed(u.instagramSubscribed || false);
+        }
+      } catch {
+        /* ignorar */
+      }
       return;
     }
+
     return onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (!u) {
@@ -59,6 +68,8 @@ export function AuthProvider({ children }) {
         setTermsAccepted(false);
         setYoutubeSubscribed(false);
         setInstagramSubscribed(false);
+        // Limpiar sesión demo
+        try { localStorage.removeItem('jere_demo_user'); } catch {}
         return;
       }
       try {
@@ -93,12 +104,28 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     });
-  }, [isClientConfigured]);
+  }, [auth, db]);
 
   const login = useCallback(async () => {
     setError(null);
     if (!auth) {
-      setError('demo');
+      // Modo demo: crear usuario local sin Firebase
+      const demoUser = {
+        uid: 'demo-' + Date.now(),
+        displayName: 'Usuario Demo',
+        email: 'demo@jere.com',
+        photoURL: '',
+        role: 'user',
+        terms_accepted: false,
+        youtube_subscribed: false,
+        instagram_subscribed: false,
+      };
+      setUser(demoUser);
+      setRole(demoUser.role);
+      setTermsAccepted(false);
+      setYoutubeSubscribed(false);
+      setInstagramSubscribed(false);
+      try { localStorage.setItem('jere_demo_user', JSON.stringify(demoUser)); } catch {}
       return;
     }
     try {
@@ -112,8 +139,107 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    if (auth) await signOut(auth);
+    setUser(null);
+    setRole('user');
+    setLoading(false);
+    setTermsAccepted(false);
+    setYoutubeSubscribed(false);
+    setInstagramSubscribed(false);
+    setError(null);
+    try { localStorage.removeItem('jere_demo_user'); } catch {}
+    if (auth) {
+      try { await signOut(auth); } catch {}
+    }
   }, [auth]);
+
+  const aceptarTerminos = useCallback(async (accepted) => {
+    setTermsAccepted(accepted);
+    if (user) {
+      try {
+        await setDoc(doc(db, 'usuarios', user.uid), { terms_accepted: accepted }, { merge: true });
+      } catch {
+        // Si no hay Firestore, guardar en localStorage
+        try {
+          const saved = localStorage.getItem('jere_demo_user');
+          if (saved) {
+            const u = JSON.parse(saved);
+            u.terms_accepted = accepted;
+            localStorage.setItem('jere_demo_user', JSON.stringify(u));
+            setTermsAccepted(accepted);
+          }
+        } catch {}
+      }
+    } else {
+      // Usuario demo: guardar en localStorage
+      try {
+        const saved = localStorage.getItem('jere_demo_user');
+        if (saved) {
+          const u = JSON.parse(saved);
+          u.terms_accepted = accepted;
+          localStorage.setItem('jere_demo_user', JSON.stringify(u));
+          setTermsAccepted(accepted);
+        }
+      } catch {}
+    }
+  }, [user, db]);
+
+  const marcarYoutube = useCallback(async (subscribed) => {
+    setYoutubeSubscribed(subscribed);
+    if (user) {
+      try {
+        await setDoc(doc(db, 'usuarios', user.uid), { youtube_subscribed: subscribed }, { merge: true });
+      } catch {
+        try {
+          const saved = localStorage.getItem('jere_demo_user');
+          if (saved) {
+            const u = JSON.parse(saved);
+            u.youtube_subscribed = subscribed;
+            localStorage.setItem('jere_demo_user', JSON.stringify(u));
+            setYoutubeSubscribed(subscribed);
+          }
+        } catch {}
+      }
+    } else {
+      try {
+        const saved = localStorage.getItem('jere_demo_user');
+        if (saved) {
+          const u = JSON.parse(saved);
+          u.youtube_subscribed = subscribed;
+          localStorage.setItem('jere_demo_user', JSON.stringify(u));
+          setYoutubeSubscribed(subscribed);
+        }
+      } catch {}
+    }
+  }, [user, db]);
+
+  const marcarInstagram = useCallback(async (subscribed) => {
+    setInstagramSubscribed(subscribed);
+    if (user) {
+      try {
+        await setDoc(doc(db, 'usuarios', user.uid), { instagram_subscribed: subscribed }, { merge: true });
+      } catch {
+        try {
+          const saved = localStorage.getItem('jere_demo_user');
+          if (saved) {
+            const u = JSON.parse(saved);
+            u.instagram_subscribed = subscribed;
+            localStorage.setItem('jere_demo_user', JSON.stringify(u));
+            setInstagramSubscribed(subscribed);
+          }
+        } catch {}
+      }
+    } else {
+      try {
+        const saved = localStorage.getItem('jere_demo_user');
+        if (saved) {
+          const u = JSON.parse(saved);
+          u.instagram_subscribed = subscribed;
+          localStorage.setItem('jere_demo_user', JSON.stringify(u));
+          setInstagramSubscribed(subscribed);
+        }
+      } catch {}
+    }
+  }, [user, db]);
 
   const value = useMemo(
     () => ({
@@ -128,13 +254,16 @@ export function AuthProvider({ children }) {
       login,
       logout,
       error,
+      aceptarTerminos,
+      marcarYoutube,
+      marcarInstagram,
     }),
-    [user, role, loading, isClientConfigured, termsAccepted, youtubeSubscribed, instagramSubscribed, login, logout]
+    [user, role, loading, isClientConfigured, termsAccepted, youtubeSubscribed, instagramSubscribed, login, logout, error, aceptarTerminos, marcarYoutube, marcarInstagram]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
