@@ -888,7 +888,7 @@ export default function InteractiveMap() {
       )}
 
       {/* Selector de puntos encimados */}
-      {elegir && (
+      {elegir && elegir.puntos && elegir.puntos.length > 0 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -918,14 +918,14 @@ export default function InteractiveMap() {
             </p>
             <div className="space-y-2">
               {elegir.puntos.map((p) => {
-                const cat = CATEGORIAS_PUNTOS[p.categoria] || CATEGORIAS_PUNTOS.importante;
+                const cat = CATEGORIAS_PUNTOS[p?.categoria] || CATEGORIAS_PUNTOS.importante;
                 const n = numeros.get(p.id) ?? 0;
                 return (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => {
-                      pickRef.current(p.id, { fly: false });
+                      pickRef.current?.(p.id, { fly: false });
                       setElegir(null);
                     }}
                     className="flex items-center gap-3 rounded-xl border-2 border-noche bg-white px-3 py-2 text-sm font-bold text-noche hover:bg-crema transition"
@@ -933,8 +933,8 @@ export default function InteractiveMap() {
                     <span
                       className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-noche bg-white text-xs font-extrabold"
                       style={{
-                        backgroundColor: cat.pinBg,
-                        color: cat.textColor,
+                        backgroundColor: cat.pinBg || '#ffc93c',
+                        color: cat.textColor || '#1f2a44',
                       }}
                     >
                       {n}
@@ -948,9 +948,6 @@ export default function InteractiveMap() {
                         {p.pais ? `, ${p.pais}` : ''}
                       </div>
                     </div>
-                    <span className={`h-6 w-6 rounded-full border-2 border-noche flex items-center justify-center text-xs font-extrabold ${sel?.id === p.id ? 'bg-sol text-white' : 'bg-white text-noche'}`}>
-                      {n}
-                    </span>
                   </button>
                 );
               })}
