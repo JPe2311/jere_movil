@@ -1,9 +1,30 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { useMemo } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import LoginWall from '@/components/LoginWall';
 import MapSection from '@/components/MapSection';
 
 export default function HomePage() {
+  const { termsAccepted, youtubeSubscribed, instagramSubscribed } = useAuth();
+
+  // Solo habilitado si acepta Términos y sigue YouTube + Instagram
+  const puedeVer = useMemo(
+    () => termsAccepted && youtubeSubscribed && instagramSubscribed,
+    [termsAccepted, youtubeSubscribed, instagramSubscribed]
+  );
+
+  if (!puedeVer) return <LoginWall />;
+
   return (
-    <div className="h-[calc(100dvh-4rem)] w-full">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', damping: 15 }}
+      className="h-[calc(100dvh-4rem)] w-full"
+    >
       <MapSection />
-    </div>
+    </motion.div>
   );
 }
