@@ -200,6 +200,8 @@ export default function InteractiveMap() {
 
   // Pines encimados: un solo botón que abre el selector de eventos
   const [elegir, setElegir] = useState(null);
+  // Ref para rastrear si el click fue en el stack (evita que el mapa lo cierre)
+  const clickEnStack = useRef(false);
 
   // ---------- Objetivos en el mapa (bandera 🏁) ----------
   const { items: objetivos, loading: objetivosLoading } = useCollection('objetivos', 'creado', 'desc');
@@ -512,8 +514,13 @@ export default function InteractiveMap() {
     if (!map || !grupos.length) return undefined;
 
     const group = L.layerGroup().addTo(map);
-    const cerrarSelector = () => setElegir(null);
-    map.on('click', cerrarSelector);
+    map.on('click', (e) => {
+      // Solo cerrar si el click NO fue en el stack de pines
+      if (!clickEnStack.current) {
+        setElegir(null);
+      }
+      clickEnStack.current = false;
+    });
 
     grupos.forEach((g) => {
       // Un solo punto: el pin de siempre
@@ -552,14 +559,14 @@ export default function InteractiveMap() {
         zIndexOffset: 500,
       })
         .on('click', (e) => {
-          e.originalEvent.stopPropagation(); // evita que el mapa cierre el selector
+          clickEnStack.current = true;
           setElegir({ puntos: g.puntos });
         })
         .addTo(group);
     });
 
     return () => {
-      map.off('click', cerrarSelector);
+      map.off('click');
       group.remove();
     };
   }, [grupos, numeros, selectedId]);
