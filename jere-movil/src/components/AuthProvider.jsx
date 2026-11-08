@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
-import { isFirebaseConfigured, auth, db } from '@/lib/firebase';
+import { isFirebaseConfigured, auth, db, googleProvider } from '@/lib/firebase';
 
 const AuthContext = createContext({
   user: null,
