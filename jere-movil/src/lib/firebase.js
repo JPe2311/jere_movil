@@ -12,10 +12,10 @@ const config = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Sin variables de entorno la web funciona en "modo demo" (datos de ejemplo, sin login).
-export const isFirebaseConfigured = Boolean(config.apiKey && config.projectId);
+// Función para verificar configuración en tiempo de ejecución (evita errores SSR en Vercel)
+export const isFirebaseConfigured = () => !!(config.apiKey && config.projectId);
 
-const app = isFirebaseConfigured ? (getApps().length ? getApp() : initializeApp(config)) : null;
+const app = isFirebaseConfigured() ? (getApps().length ? getApp() : initializeApp(config)) : null;
 
 export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;

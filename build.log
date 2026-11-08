@@ -1,0 +1,44 @@
+﻿
+> jere-movil@0.1.0 build
+> next build
+
+powershell :  ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+En línea: 1 Carácter: 1
++ powershell -Command "cd 'C:\Users\Jpvar\OneDrive\Documentos\JERE MOVI ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ÔÜá Warning: N...not be correct.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ We detected multiple lockfiles and selected the directory of C:\Users\Jpvar\OneDrive\Documentos\JERE 
+MOVIL\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the 
+lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Jpvar\OneDrive\Documentos\JERE MOVIL\jere-movil\package-lock.json
+
+   Ôû▓ Next.js 15.5.29
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/components/AuthProvider.jsx
+Error:   [31mx[0m Expected '{', got '=>'
+     ,-[[36;1;4mC:\Users\Jpvar\OneDrive\Documentos\JERE MOVIL\jere-movil\src\components\AuthProvider.jsx[0m:140:1]
+ [2m137[0m |   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+ [2m138[0m | }
+ [2m139[0m | 
+ [2m140[0m | export function useAuth() => useContext(AuthContext);
+     : [35;1m                          ^^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/AuthProvider.jsx
+./src/components/Navbar.jsx
+
+
+> Build failed because of webpack errors
