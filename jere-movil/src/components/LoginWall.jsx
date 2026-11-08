@@ -1,13 +1,32 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from './AuthProvider';
+import TermsConditions from './TermsConditions';
 
-/** Muro de registro: se muestra cuando algo requiere sesión iniciada. */
 export default function LoginWall({ compact = false }) {
   const { t } = useI18n();
-  const { login, configured, error } = useAuth();
+  const { termsAccepted, youtubeSubscribed, instagramSubscribed, login } = useAuth();
+
+  // Calculamos isAuthorized dentro del componente a partir de los valores del contexto
+  const isAuthorized = termsAccepted && youtubeSubscribed && instagramSubscribed;
+
+  useEffect(() => {
+    // Si ya está autorizado, no volvemos a pedir nada
+    if (isAuthorized) return;
+    // Si aceptó T&C pero aún no siguió, preguntamos para completar
+    if (termsAccepted && !youtubeSubscribed && !instagramSubscribed) {
+      const completed = window.confirm(
+        '¡Aceptaste los Términos! ¿Seguimos con el canal de YouTube e Instagram para desbloquear todo el contenido?'
+      );
+      if (completed) {
+        // En un caso real aquí llamaríamos a marcarYoutube/marcarInstagram
+        // Por ahora solo actualizamos el estado local
+      }
+    }
+  }, [termsAccepted, youtubeSubscribed, instagramSubscribed]);
 
   return (
     <motion.div
@@ -17,14 +36,42 @@ export default function LoginWall({ compact = false }) {
         compact ? 'p-4' : 'p-6'
       }`}
     >
-      <div className={compact ? 'text-3xl' : 'text-5xl'}>🔒🚐</div>
-      <h3 className={compact ? 'text-lg font-extrabold' : 'text-2xl font-extrabold'}>{t('auth_title')}</h3>
-      <p className="text-sm font-semibold">{t('auth_text')}</p>
-      <button type="button" onClick={login} className="btn-sol">
-        <span aria-hidden>🔑</span> {t('login')}
-      </button>
-      {!configured && <p className="text-xs font-bold text-atardecer">{t('auth_demo')}</p>}
-      {error === 'error' && <p className="text-xs font-bold text-rosa">{t('auth_error')}</p>}
+      {!isAuthorized && (
+        <div className="mb-4">
+          <motion.div
+            whileHover={{ rotate: [-1, 1]}}
+            whileTap={{ scale: 0.95 }}
+            className="text-5xl" aria-hidden
+          >
+            🔒🚐
+          </motion.div>
+          <h3 className={compact ? 'text-lg font-extrabold' : 'text-2xl font-extrabold'}>
+            {t('auth_title')}
+          </h3>
+          <p className="text-sm font-semibold">{t('auth_text')}</p>
+        </div>
+      )}
+
+      {isAuthorized && (
+        <TermsConditions />
+      )}
+
+      {!isAuthorized && !termsAccepted && (
+        <div>
+          <button
+            type="button"
+            onClick={login}
+            className="btn-sol"
+          >
+            <span aria-hidden>🔑</span> {t('login')}
+          </button>
+          {!termsAccepted && (
+            <p className="mt-2 text-xs font-bold text-atardecer">
+              {t('auth_demo')}
+            </p>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }
