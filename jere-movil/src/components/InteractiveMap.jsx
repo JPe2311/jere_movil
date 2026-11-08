@@ -9,6 +9,7 @@ import { useCollection } from '@/lib/useCollection';
 import { demoPuntos } from '@/lib/demoData';
 import { toMillis } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
+import { buildFullRoadPath } from '@/lib/routing';
 import TimelineSlider from './TimelineSlider';
 import CitySearch from './CitySearch';
 import MilestoneModal from './MilestoneModal';
@@ -17,7 +18,7 @@ import { createHiluxCamperModel } from './camper3d/createCamperModel';
 
 const DAY = 86_400_000;
 
-// Proveedores de mapas 100% Open Source de la comunidad OpenStreetMap (CERO API Keys necesarias)
+// Proveedores de mapas 100% Open Source de la comunidad OpenStreetMap (CERO API Keys)
 const OPEN_SOURCE_MAPS = {
   osm: {
     name: 'OpenStreetMap Oficial (100% Libre)',
@@ -60,7 +61,27 @@ function calculateHeading(p1, p2) {
   return angleDeg;
 }
 
-/** Posición y rumbo de La Bebi en el instante ts, interpolando entre puntos de la ruta. */
+/** Calcula posición y ángulo sobre la carretera real */
+function positionOnRoad(roadPath, frac) {
+  if (!roadPath || roadPath.length === 0) return null;
+  if (roadPath.length === 1) return { lat: roadPath[0][0], lng: roadPath[0][1], heading: 0, baseIdx: 0 };
+
+  const maxIdx = roadPath.length - 1;
+  const floatIdx = Math.max(0, Math.min(maxIdx, frac * maxIdx));
+  const baseIdx = Math.floor(floatIdx);
+  const rem = floatIdx - baseIdx;
+
+  const a = roadPath[baseIdx];
+  const b = roadPath[Math.min(baseIdx + 1, maxIdx)];
+
+  const lat = a[0] + (b[0] - a[0]) * rem;
+  const lng = a[1] + (b[1] - a[1]) * rem;
+
+  const heading = calculateHeading({ lat: a[0], lng: a[1] }, { lat: b[0], lng: b[1] });
+  return { lat, lng, heading, baseIdx };
+}
+
+/** Posición entre hitos (usada como fallback mientras carga la carretera) */
 function positionAt(puntos, ts) {
   const last = puntos[puntos.length - 1];
   if (ts <= puntos[0].ts) {
@@ -91,9 +112,11 @@ export default function InteractiveMap() {
 
   const isDemo = !loading && items.length === 0;
 
-  // Mapa Open Source seleccionado por defecto: OpenStreetMap Oficial (Cero API Keys)
+  // Mapa Open Source seleccionado por defecto (100% Libre sin API Key)
   const [mapStyle, setMapStyle] = useState('osm');
   const [show3DModal, setShow3DModal] = useState(false);
+  const [roadPath, setRoadPath] = useState([]);
+  const [roadLoading, setRoadLoading] = useState(false);
 
   // Puntos ordenados cronológicamente
   const puntos = useMemo(() => {
@@ -128,6 +151,36 @@ export default function InteractiveMap() {
   const threeRef = useRef(null);
   const targetYawRef = useRef(Math.PI);
   const isDrivingRef = useRef(false);
+  const roadPathRef = useRef([]);
+
+  /* ---------- 0) Obtener la carretera real (OSRM libre) que une las ciudades ---------- */
+  useEffect(() => {
+    if (!puntos.length) {
+      setRoadPath([]);
+      roadPathRef.current = [];
+      return;
+    }
+    let cancelled = false;
+    setRoadLoading(true);
+
+    buildFullRoadPath(puntos).then((coords) => {
+      if (cancelled) return;
+      if (coords && coords.length > 0) {
+        setRoadPath(coords);
+        roadPathRef.current = coords;
+
+        // Si la capa ya existe en el mapa, actualizar el trazado con las curvas reales
+        if (layersRef.current.full) {
+          layersRef.current.full.setLatLngs(coords);
+        }
+      }
+      setRoadLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [puntos]);
 
   /* ---------- 1) Crear mapa Leaflet Open Source ---------- */
   useEffect(() => {
@@ -207,19 +260,25 @@ export default function InteractiveMap() {
     pickRef.current = pick;
   }, [pick]);
 
-  /* ---------- 2) Capas: Ruta, Hitos y Camioneta 3D Real (Three.js WebGL) ---------- */
+  /* ---------- 2) Capas: Carretera Real, Hitos y Camioneta 3D ---------- */
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !puntos.length) return undefined;
 
-    const latlngs = puntos.map((p) => [p.lat, p.lng]);
+    // Trazado inicial: si la carretera real ya está cargada se usa roadPath, si no los puntos directos temporalmente
+    const latlngs = roadPath.length > 0 ? roadPath : puntos.map((p) => [p.lat, p.lng]);
+
+    // Trazado completo de la carretera (línea punteada)
     const full = L.polyline(latlngs, {
-      color: '#1F2A44', weight: 4, opacity: 0.25, dashArray: '2 10', lineCap: 'round',
+      color: '#1F2A44', weight: 4, opacity: 0.35, dashArray: '4 8', lineCap: 'round',
     }).addTo(map);
+
+    // Trazado recorrido (línea naranja viva continua)
     const done = L.polyline([], {
       color: '#FF7A3D', weight: 6, opacity: 0.95, lineCap: 'round', lineJoin: 'round',
     }).addTo(map);
 
+    // Pines de ciudades / hitos
     const group = L.layerGroup().addTo(map);
     puntos.forEach((p, i) => {
       const icon = L.divIcon({
@@ -251,10 +310,10 @@ export default function InteractiveMap() {
     const bebi = L.marker(latlngs[0], { icon: bebiIcon, zIndexOffset: 1000, interactive: true }).addTo(map);
     bebi.on('click', () => setShow3DModal(true));
 
-    layersRef.current = { done, bebi };
-    map.fitBounds(L.latLngBounds(latlngs).pad(0.25), { maxZoom: 6 });
+    layersRef.current = { done, bebi, full };
+    map.fitBounds(L.latLngBounds(puntos.map((p) => [p.lat, p.lng])).pad(0.25), { maxZoom: 6 });
 
-    // Inicializar el motor 3D WebGL de Three.js dentro del marcador de Leaflet
+    // Inicializar el motor 3D WebGL de Three.js
     let threeInstance = null;
     let animFrameId = null;
 
@@ -269,12 +328,10 @@ export default function InteractiveMap() {
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
       const scene = new THREE.Scene();
-      // Cámara elevada con perspectiva isométrica que mira al centro de la camioneta
       const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
       camera.position.set(0, 5.8, 5.0);
       camera.lookAt(0, 0.85, 0);
 
-      // Iluminación solar exterior y ambiente
       const ambientLight = new THREE.AmbientLight(0xfff8ee, 1.8);
       scene.add(ambientLight);
 
@@ -287,7 +344,6 @@ export default function InteractiveMap() {
       fillLight.position.set(-6, 6, -6);
       scene.add(fillLight);
 
-      // Modelo 3D de La Bebi (Toyota Hilux con módulo camper y pintura de montaña)
       const camper = createHiluxCamperModel();
       scene.add(camper.root);
 
@@ -303,7 +359,6 @@ export default function InteractiveMap() {
       };
       threeRef.current = threeInstance;
 
-      // Loop de render continuo en 3D
       let clock = new THREE.Clock();
       const loop = () => {
         animFrameId = requestAnimationFrame(loop);
@@ -314,7 +369,6 @@ export default function InteractiveMap() {
           const { camper: c, currentYaw, renderer: r, scene: sc, camera: cam } = threeRef.current;
           const target = targetYawRef.current;
 
-          // Interpolación suave del ángulo yaw (giro horizontal en 3D)
           let diff = target - currentYaw;
           while (diff < -Math.PI) diff += Math.PI * 2;
           while (diff > Math.PI) diff -= Math.PI * 2;
@@ -322,9 +376,8 @@ export default function InteractiveMap() {
 
           c.setHeading(threeRef.current.currentYaw);
 
-          // Si avanza por la ruta, girar neumáticos y amortiguación de suspensión
           if (isDrivingRef.current) {
-            c.spinWheels(0.18);
+            c.spinWheels(0.2);
             c.root.position.y = Math.sin(time * 12) * 0.04;
           } else {
             c.root.position.y = Math.sin(time * 2.5) * 0.015;
@@ -336,7 +389,6 @@ export default function InteractiveMap() {
       loop();
     };
 
-    // Dar tiempo mínimo a que Leaflet inserte el DOM
     const timer = setTimeout(setupThreeOnMarker, 120);
 
     return () => {
@@ -352,31 +404,44 @@ export default function InteractiveMap() {
       bebi.remove();
       layersRef.current = {};
     };
-  }, [puntos]);
+  }, [puntos, roadPath]);
 
-  /* ---------- 3) El timeline mueve y GIRA en 3D a La Bebi ---------- */
+  /* ---------- 3) El timeline mueve a La Bebi siguiendo las curvas de la carretera ---------- */
   const update = useCallback(
     (frac) => {
       const { done, bebi } = layersRef.current;
       if (!bebi || !puntos.length) return;
-      const ts = start + frac * (end - start);
-      const pos = positionAt(puntos, ts);
-      bebi.setLatLng([pos.lat, pos.lng]);
 
-      // IMPORTANTE:
-      // En Three.js, la rotación 3D es sobre el eje Y (yaw vertical).
-      // Las ruedas SIEMPRE están en el suelo (Y=0) y el techo arriba.
-      // Calculamos el yaw para que el frente de la Hilux apunte exactamente a la carretera:
-      if (Number.isFinite(pos.heading)) {
+      const rPath = roadPathRef.current;
+      let pos;
+
+      if (rPath && rPath.length > 1) {
+        // Posición exacta sobre la carretera real
+        pos = positionOnRoad(rPath, frac);
+        bebi.setLatLng([pos.lat, pos.lng]);
+
+        const completedRoad = rPath.slice(0, pos.baseIdx + 1).concat([[pos.lat, pos.lng]]);
+        done.setLatLngs(completedRoad);
+      } else {
+        // Fallback mientras carga la carretera
+        const ts = start + frac * (end - start);
+        pos = positionAt(puntos, ts);
+        bebi.setLatLng([pos.lat, pos.lng]);
+
+        const path = puntos.slice(0, pos.idx + 1).map((p) => [p.lat, p.lng]);
+        path.push([pos.lat, pos.lng]);
+        done.setLatLngs(path);
+      }
+
+      // Orientar la camioneta 3D en la dirección de la curva de la carretera
+      if (pos && Number.isFinite(pos.heading)) {
         targetYawRef.current = Math.PI - (pos.heading * Math.PI) / 180;
       }
 
-      const path = puntos.slice(0, pos.idx + 1).map((p) => [p.lat, p.lng]);
-      path.push([pos.lat, pos.lng]);
-      done.setLatLngs(path);
-
+      const ts = start + frac * (end - start);
       const day = Math.floor((ts - start) / DAY) + 1;
-      setCurrent((prev) => (prev.idx === pos.idx && prev.day === day ? prev : { idx: pos.idx, day, ts }));
+      const idx = pos?.idx ?? Math.floor(frac * (puntos.length - 1));
+      setCurrent((prev) => (prev.idx === idx && prev.day === day ? prev : { idx, day, ts }));
     },
     [puntos, start, end]
   );
@@ -400,7 +465,7 @@ export default function InteractiveMap() {
     setPlaying(true);
     isDrivingRef.current = true;
     animRef.current = animate(progress, 1, {
-      duration: Math.max(4, (1 - from) * 30),
+      duration: Math.max(4, (1 - from) * 32),
       ease: 'linear',
       onComplete: () => {
         setPlaying(false);
@@ -433,6 +498,13 @@ export default function InteractiveMap() {
 
       {/* Botonera superior derecha: Mapa Open Source & Visor 3D */}
       <div className="absolute right-3 top-3 z-[1000] flex flex-wrap items-center justify-end gap-2 sm:right-5">
+        {/* Indicador de carretera real cargada */}
+        {roadLoading && (
+          <div className="rounded-full border-2 border-noche bg-sol px-2.5 py-1 text-[11px] font-black text-noche shadow-comic-sm animate-pulse">
+            🛣️ Trazando carreteras...
+          </div>
+        )}
+
         {/* Selector de capa Open Source (Sin API Key) */}
         <div className="flex items-center gap-1.5 rounded-full border-2 border-noche bg-white/95 px-3 py-1 text-xs font-black shadow-comic-sm backdrop-blur-sm">
           <span>🗺️</span>
