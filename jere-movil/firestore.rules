@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Perfil de usuario. El rol "admin" se asigna a mano desde la consola de Firebase.
+    match /usuarios/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == 'user';
+      allow update: if isAdmin();
+    }
+
+    // Contenido público, solo el admin escribe
+    match /puntos_mapa/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /quien_soy_bloques/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /videos/{videoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Comentarios: lectura pública, escribir requiere sesión
+      match /comentarios/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn()
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() > 0
+          && request.resource.data.texto.size() <= 1000;
+        allow delete: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      }
+    }
+
+    // Recursos: la ficha es pública (vidriera), el archivo/enlace real es privado
+    match /recursos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /recursos_privados/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
