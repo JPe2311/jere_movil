@@ -12,9 +12,12 @@ const config = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Función para verificar configuración en tiempo de ejecución (evita errores SSR en Vercel)
+// Función para verificar configuración en tiempo de ejecución (para Vercel/SSR)
+// next build no tiene access a process.env en el contexto de prerender,
+// por lo tanto usamos esta función que se evalúa solo en el cliente.
 export const isFirebaseConfigured = () => !!(config.apiKey && config.projectId);
 
+// Usamos la función (no el valor estático) para inicializar la app
 const app = isFirebaseConfigured() ? (getApps().length ? getApp() : initializeApp(config)) : null;
 
 export const auth = app ? getAuth(app) : null;

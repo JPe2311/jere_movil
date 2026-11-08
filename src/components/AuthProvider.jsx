@@ -3,31 +3,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
-
-// Determinar si Firebase está configurado en tiempo de ejecución
-// Usamos un useEffect para setearlo en el cliente, evitando errores SSR en Vercel
-const [isClientConfigured, setIsClientConfigured] = useState(false);
-
-useEffect(() => {
-  // Verificamos en el cliente si Firebase tiene las credenciales mínimas
-  try {
-    // importamos dinámicamente para evitar errores en SSR
-    setIsClientConfigured(!!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID));
-  } catch {
-    setIsClientConfigured(false);
-  }
-}, []);
+import { isFirebaseConfigured, auth, db } from '@/lib/firebase';
 
 const AuthContext = createContext({
   user: null,
   role: 'user',
   isAdmin: false,
-  loading: false,
-  configured: false,
-  login: async () => {},
-  logout: async () => {},
-  error: null,
+  loading: true,
+  // Inicializamos configured en true para evitar errores SSR;
+  // el useEffect abajo lo actualizará al valor real en el cliente.
+  configured: true,
   termsAccepted: false,
   youtubeSubscribed: false,
   instagramSubscribed: false,
@@ -41,16 +26,30 @@ export function AuthProvider({ children }) {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [youtubeSubscribed, setYoutubeSubscribed] = useState(false);
   const [instagramSubscribed, setInstagramSubscribed] = useState(false);
+  // Estado de configuración: empieza en true para evitar errores SSR;
+  // el useEffect lo actualiza al valor real después del primer render.
+  const [isClientConfigured, setIsClientConfigured] = useState(true);
 
-  // Después de verificar la configuración en useEffect, continuar con la auth state changed
+  useEffect(() => {
+    // Verificamos en el cliente si Firebase tiene las credenciales mínimas.
+    // Usamos process.env que está disponible solo en el cliente después del primer render.
+    try {
+      setIsClientConfigured(!!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID));
+    } catch {
+      setIsClientConfigured(false);
+    }
+    // Después de verificar, actualizamos el estado 'configured' del contexto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!isClientConfigured) {
       setLoading(false);
-      return undefined;
+      return;
     }
     if (!auth || !db) {
       setLoading(false);
-      return undefined;
+      return;
     }
     return onAuthStateChanged(auth, async (u) => {
       setUser(u);
@@ -96,7 +95,6 @@ export function AuthProvider({ children }) {
     });
   }, [isClientConfigured]);
 
-  // Si no está configurado, aún así permitir login pero marcar como no configurado
   const login = useCallback(async () => {
     setError(null);
     if (!auth) {

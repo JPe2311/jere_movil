@@ -3,17 +3,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '@/lib/firebase';
+import { isFirebaseConfigured, auth, db } from '@/lib/firebase';
 
 const AuthContext = createContext({
   user: null,
   role: 'user',
   isAdmin: false,
-  loading: false,
-  configured: false,
-  login: async () => {},
-  logout: async () => {},
-  error: null,
+  loading: true,
+  // Inicializamos configured en true para evitar errores SSR;
+  // el useEffect abajo lo actualizará al valor real en el cliente.
+  configured: true,
   termsAccepted: false,
   youtubeSubscribed: false,
   instagramSubscribed: false,
@@ -22,14 +21,36 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState('user');
-  const [loading, setLoading] = useState(isFirebaseConfigured);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [youtubeSubscribed, setYoutubeSubscribed] = useState(false);
   const [instagramSubscribed, setInstagramSubscribed] = useState(false);
+  // Estado de configuración: empieza en true para evitar errores SSR;
+  // el useEffect lo actualiza al valor real después del primer render.
+  const [isClientConfigured, setIsClientConfigured] = useState(true);
 
   useEffect(() => {
-    if (!auth || !db) return undefined;
+    // Verificamos en el cliente si Firebase tiene las credenciales mínimas.
+    // Usamos process.env que está disponible solo en el cliente después del primer render.
+    try {
+      setIsClientConfigured(!!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID));
+    } catch {
+      setIsClientConfigured(false);
+    }
+    // Después de verificar, actualizamos el estado 'configured' del contexto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isClientConfigured) {
+      setLoading(false);
+      return;
+    }
+    if (!auth || !db) {
+      setLoading(false);
+      return;
+    }
     return onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (!u) {
@@ -72,7 +93,7 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     });
-  }, [auth, db]);
+  }, [isClientConfigured]);
 
   const login = useCallback(async () => {
     setError(null);
@@ -100,7 +121,7 @@ export function AuthProvider({ children }) {
       role,
       isAdmin: role === 'admin',
       loading,
-      configured: isFirebaseConfigured,
+      configured: isClientConfigured,
       termsAccepted,
       youtubeSubscribed,
       instagramSubscribed,
@@ -114,4 +135,6 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() => useContext(AuthContext);
+export function useAuth() {
+    return useContext(AuthContext);
+}
