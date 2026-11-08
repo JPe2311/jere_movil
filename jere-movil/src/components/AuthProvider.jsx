@@ -14,7 +14,7 @@ const AuthContext = createContext({
   role: 'user',
   isAdmin: false,
   loading: false,
-  configured: false,
+  configured: false, // Será setado en useEffect abajo
   login: async () => {},
   logout: async () => {},
   error: null,

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
-import { useAuth, useMemo } from '@/components/AuthProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 
 export default function RecursosPage() {
