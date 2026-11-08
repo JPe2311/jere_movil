@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   borrarObjetivo,
@@ -23,73 +23,47 @@ export default function ObjetivosAdmin() {
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
 
+  // --- Geocodificación con Nominatim (OpenStreetMap) para buscar lugar por nombre ---
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState([]);
+  const skip = useRef(false);
+
   useEffect(() => {
-    cargar();
-  }, []);
-
-  async function cargar() {
-    try {
-      const data = await obtenerObjetivos();
-      setObjetivos(data);
-      setLoading(false);
-    } catch (err) {
-      setMsg({ text: err.message, tone: 'error' });
-      setLoading(false);
+    if (skip.current) {
+      skip.current = false;
+      return undefined;
     }
-  }
-
-  function abrirNuevo() {
-    setEditId(null);
-    setTitulo('');
-    setDescripcion('');
-    setLat('');
-    setLng('');
-    setAbierto(true);
-  }
-
-  function editar(o) {
-    setEditId(o.id);
-    setTitulo(o.titulo || '');
-    setDescripcion(o.descripcion || '');
-    setLat(String(o.lat ?? ''));
-    setLng(String(o.lng ?? ''));
-    setAbierto(true);
-  }
-
-  async function guardar() {
-    if (!titulo.trim()) {
-      setMsg({ text: 'El título es obligatorio', tone: 'error' });
-      return;
+    if (q.trim().length < 3) {
+      setResults([]);
+      return undefined;
     }
-    const latNum = Number(lat);
-    const lngNum = Number(lng);
-    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
-      setMsg({ text: 'Latitud y longitud deben ser números válidos', tone: 'error' });
-      return;
-    }
-    try {
-      if (editId) {
-        await actualizarObjetivo(editId, { titulo: titulo.trim(), descripcion: descripcion.trim(), lat: latNum, lng: lngNum });
-      } else {
-        await crearObjetivo({ titulo: titulo.trim(), descripcion: descripcion.trim(), lat: latNum, lng: lngNum });
+    const ctl = new AbortController();
+    const id = setTimeout(async () => {
+      try {
+        const r = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&accept-language=es&q=${encodeURIComponent(q)}`,
+          { signal: ctl.signal }
+        );
+        setResults(await r.json());
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error(err);
       }
-      setAbierto(false);
-      setMsg({ text: editId ? 'Objetivo actualizado ✅' : 'Objetivo creado ✅', tone: 'ok' });
-      await cargar();
-    } catch (err) {
-      setMsg({ text: err.message, tone: 'error' });
-    }
-  }
+    }, 600);
+    return () => {
+      clearTimeout(id);
+      ctl.abort();
+    };
+  }, [q]);
 
-  async function eliminar(id) {
-    if (!window.confirm('¿Borrar este objetivo?')) return;
-    try {
-      await borrarObjetivo(id);
-      setMsg({ text: 'Objetivo borrado 🗑', tone: 'ok' });
-      await cargar();
-    } catch (err) {
-      setMsg({ text: err.message, tone: 'error' });
-    }
+  function pickPlace(r) {
+    const a = r.address || {};
+    setLat(String(parseFloat(r.lat)));
+    setLng(String(parseFloat(r.lon)));
+    setTitulo(a.city || a.town || a.village || a.municipality || r.name || q);
+    setDescripcion(a.country || '');
+    skip.current = true;
+    setQ(r.display_name);
+    setResults([]);
   }
 
   if (loading) {
@@ -112,7 +86,7 @@ export default function ObjetivosAdmin() {
       <div className="mb-4 flex items-center gap-2">
         <button
           type="button"
-          onClick={abrirNuevo}
+          onClick={() => { setEditId(null); setTitulo(''); setDescripcion(''); setLat(''); setLng(''); setAbierto(true); }}
           className="btn btn-cielo"
         >
           ➕ Agregar objetivo
@@ -133,14 +107,27 @@ export default function ObjetivosAdmin() {
               <button
                 type="button"
                 className="btn-ghost !py-1 text-sm"
-                onClick={() => editar(o)}
+                onClick={() => {
+                  setEditId(o.id);
+                  setTitulo(o.titulo || '');
+                  setDescripcion(o.descripcion || '');
+                  setLat(String(o.lat ?? ''));
+                  setLng(String(o.lng ?? ''));
+                  setAbierto(true);
+                }}
               >
                 Editar
               </button>
               <button
                 type="button"
                 className="btn-rosa !py-1 text-sm"
-                onClick={() => eliminar(o.id)}
+                onClick={() => {
+                  if (!window.confirm('¿Borrar este objetivo?')) return;
+                  borrarObjetivo(o.id).then(() => {
+                    setMsg({ text: 'Objetivo borrado 🗑', tone: 'ok' });
+                    cargar();
+                  }).catch((err) => setMsg({ text: err.message, tone: 'error' }));
+                }}
               >
                 Borrar
               </button>
@@ -172,6 +159,33 @@ export default function ObjetivosAdmin() {
               <h2 className="font-display text-2xl font-extrabold text-center mb-4">
                 {editId ? '✏️ Editar objetivo' : '➕ Nuevo objetivo'}
               </h2>
+
+              <Field label="Buscar lugar (ciudad, monumento, país)">
+                <input
+                  className="input w-full"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Ej: Machu Picchu, Perú"
+                  autoComplete="off"
+                />
+                {results.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border-2 border-noche rounded-xl shadow-comic max-h-48 overflow-y-auto">
+                    {results.map((r, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => pickPlace(r)}
+                        className="w-full text-left px-3 py-2 text-sm font-bold text-noche hover:bg-crema border-b border-noche/10 last:border-0"
+                      >
+                        <div className="font-bold text-sm">{r.display_name}</div>
+                        <div className="text-xs text-noche/60 truncate">
+                          {r.lat}, {r.lon}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </Field>
 
               <Field label="Título">
                 <input
@@ -225,7 +239,30 @@ export default function ObjetivosAdmin() {
                 </button>
                 <button
                   type="button"
-                  onClick={guardar}
+                  onClick={async () => {
+                    if (!titulo.trim()) {
+                      setMsg({ text: 'El título es obligatorio', tone: 'error' });
+                      return;
+                    }
+                    const latNum = Number(lat);
+                    const lngNum = Number(lng);
+                    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
+                      setMsg({ text: 'Latitud y longitud deben ser números válidos', tone: 'error' });
+                      return;
+                    }
+                    try {
+                      if (editId) {
+                        await actualizarObjetivo(editId, { titulo: titulo.trim(), descripcion: descripcion.trim(), lat: latNum, lng: lngNum });
+                      } else {
+                        await crearObjetivo({ titulo: titulo.trim(), descripcion: descripcion.trim(), lat: latNum, lng: lngNum });
+                      }
+                      setAbierto(false);
+                      setMsg({ text: editId ? 'Objetivo actualizado ✅' : 'Objetivo creado ✅', tone: 'ok' });
+                      await cargar();
+                    } catch (err) {
+                      setMsg({ text: err.message, tone: 'error' });
+                    }
+                  }}
                   className="flex-1 btn btn-rosa py-2 rounded-full text-sm font-bold"
                 >
                   {editId ? 'Guardar cambios' : 'Crear objetivo'}
