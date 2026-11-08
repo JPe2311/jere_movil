@@ -85,8 +85,8 @@ export default function Navbar() {
             </button>
           ) : (
             <button type="button" onClick={login} className="rounded-full border-2 border-noche bg-cielo px-3 py-1 text-xs font-extrabold text-white shadow-comic-sm">
-              <span className="hidden sm:inline">{t('login')}</span>
-              <span className="sm:hidden">Google</span>
+              <span className="hidden sm:inline">Entrá!</span>
+              <span className="sm:hidden">Entrá!</span>
             </button>
           )}
 

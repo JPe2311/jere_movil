@@ -63,7 +63,7 @@ export default function LoginWall({ compact = false }) {
             onClick={login}
             className="btn-sol"
           >
-            <span aria-hidden>🔑</span> {t('login')}
+            <span aria-hidden>🔑</span> Entrá!
           </button>
           {!termsAccepted && (
             <p className="mt-2 text-xs font-bold text-atardecer">
