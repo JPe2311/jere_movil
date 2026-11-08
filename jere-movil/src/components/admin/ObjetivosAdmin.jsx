@@ -13,7 +13,7 @@ import { Field, Notice, Panel } from './ui';
 export default function ObjetivosAdmin() {
   const [objetivos, setObjetivos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(null);
   const [msg, setMsg] = useState({ text: '', tone: 'error' });
 
   // Formulario de agregar/editar
