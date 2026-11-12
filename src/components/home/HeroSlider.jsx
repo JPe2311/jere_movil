@@ -33,7 +33,6 @@ export default function HeroSlider({ slides }) {
         layout="fill"
         objectFit="cover"
       />
-
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -66,7 +65,6 @@ export default function HeroSlider({ slides }) {
           </button>
         )}
       </div>
-
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
         {slides.map((_, i) => (
           <button
