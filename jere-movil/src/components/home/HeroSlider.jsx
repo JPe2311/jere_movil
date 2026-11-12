@@ -63,7 +63,7 @@ export default function HeroSlider({ slides }) {
             }}
             className="flex items-center gap-2 px-5 py-2 rounded-full border-2 border-noche bg-sol text-white font-extrabold text-sm shadow-comic-sm hover:bg-yellow-300 transition-transform active:scale-95"
           >
-            {slide.textoBoton || 'Ver más →'}
+            {slide.textoBoton || 'Ver mas'}
           </button>
         )}
       </div>
