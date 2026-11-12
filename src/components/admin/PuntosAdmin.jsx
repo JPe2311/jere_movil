@@ -10,6 +10,7 @@ import { ordenarPuntos, planInsercion, planMovimiento, planRenumerar, persistirO
 import { uploadFiles } from '@/lib/storageUpload';
 import { formatDate, toDateInput, toMillis, toTimeInput } from '@/lib/utils';
 import { Field, Notice, Panel, PhotoStrip } from './ui';
+import { obtenerRutas } from '@/lib/rutas';
 
 export default function PuntosAdmin() {
   const { items } = useCollection('puntos_mapa', 'fechaHora', 'asc');
@@ -18,6 +19,9 @@ export default function PuntosAdmin() {
   const [files, setFiles] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState({ text: '', tone: 'error' });
+
+  // Rutas disponibles para asignar a los puntos
+  const [rutas, setRutas] = useState([]);
 
   // Orden en el que se muestran y numeran los puntos (mismo criterio que el mapa)
   const ordenados = useMemo(() => ordenarPuntos(items), [items]);
@@ -54,6 +58,19 @@ export default function PuntosAdmin() {
     };
   }, [q]);
 
+  // Cargar rutas disponibles para asignar a los puntos
+  useEffect(() => {
+    async function cargarRutas() {
+      try {
+        const data = await obtenerRutas();
+        setRutas(data);
+      } catch (err) {
+        console.error('[rutas] error cargando:', err);
+      }
+    }
+    cargarRutas();
+  }, []);
+
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   function pickPlace(r) {
@@ -88,6 +105,7 @@ export default function PuntosAdmin() {
       ciudad: p.ciudad || '', pais: p.pais || '', lat: p.lat, lng: p.lng,
       fecha: toDateInput(ms), hora: toTimeInput(ms),
       categoria: p.categoria || 'importante',
+      rutaId: p.rutaId || '',
       titulo: p.titulo || '', titulo_en: p.titulo_en || '',
       descripcion: p.descripcion || '', descripcion_en: p.descripcion_en || '',
       fotos: p.fotos || [], videoUrl: p.videoUrl || '',
@@ -140,6 +158,7 @@ export default function PuntosAdmin() {
           descripcion: form.descripcion,
           descripcion_en: form.descripcion_en,
           categoria: form.categoria || 'importante',
+          rutaId: form.rutaId || '',
           orden,
           fotos: [...form.fotos, ...nuevas],
           videoUrl: form.videoUrl,
@@ -244,6 +263,44 @@ export default function PuntosAdmin() {
             </div>
             <span className="block text-xs font-semibold text-noche/60">
               Se usa para filtrar los puntos en el mapa.
+            </span>
+          </div>
+
+          <div className="sm:col-span-2">
+            <span className="text-sm font-extrabold">Ruta</span>
+            <div className="mt-1 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, rutaId: '' }))}
+                aria-pressed={!form.rutaId}
+                title="Sin ruta (punto independiente)"
+                className={`rounded-full border-[3px] border-noche px-3 py-1 font-display text-xs font-extrabold transition ${
+                  !form.rutaId ? 'shadow-comic-sm' : 'bg-white text-noche/45 opacity-70 hover:opacity-100'
+                }`}
+              >
+                Sin ruta
+              </button>
+              {rutas.map((r) => {
+                const on = form.rutaId === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, rutaId: r.id }))}
+                    aria-pressed={on}
+                    title={r.desc || r.titulo}
+                    className={`rounded-full border-[3px] border-noche px-3 py-1 font-display text-xs font-extrabold transition ${
+                      on ? 'shadow-comic-sm' : 'bg-white text-noche/45 opacity-70 hover:opacity-100'
+                    }`}
+                    style={on ? { backgroundColor: r.color || '#FFC93C', color: '#ffffff' } : undefined}
+                  >
+                    {r.titulo}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="block text-xs font-semibold text-noche/60">
+              Ruta a la que pertenece este punto. Déjala vacía si es un punto independiente.
             </span>
           </div>
 

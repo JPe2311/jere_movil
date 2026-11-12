@@ -6,6 +6,7 @@ import LoginWall from '@/components/LoginWall';
 import PuntosAdmin from '@/components/admin/PuntosAdmin';
 import EnVivoAdmin from '@/components/admin/EnVivoAdmin';
 import ObjetivosAdmin from '@/components/admin/ObjetivosAdmin';
+import RutasAdmin from '@/components/admin/RutasAdmin';
 import QuienSoyAdmin from '@/components/admin/QuienSoyAdmin';
 import VideosAdmin from '@/components/admin/VideosAdmin';
 import RecursosAdmin from '@/components/admin/RecursosAdmin';
@@ -15,6 +16,7 @@ const tabs = [
   { id: 'puntos', label: '📍 Puntos del mapa', C: PuntosAdmin },
   { id: 'envivo', label: '📡 En vivo', C: EnVivoAdmin },
   { id: 'objetivos', label: '🏁 Objetivos', C: ObjetivosAdmin },
+  { id: 'rutas', label: '🗺️ Rutas', C: RutasAdmin },
   { id: 'quien', label: '🙋 Quién soy', C: QuienSoyAdmin },
   { id: 'videos', label: '🎬 Videos', C: VideosAdmin },
   { id: 'recursos', label: '🎁 Recursos', C: RecursosAdmin },

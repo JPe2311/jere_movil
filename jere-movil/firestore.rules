@@ -62,6 +62,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Rutas del mapa: lectura pública, escritura solo admin
+    match /rutas/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Eventos en vivo (seguimiento GPS del admin): lectura pública, escritura solo admin
     match /eventos_en_vivo/{id} {
       allow read: if true;

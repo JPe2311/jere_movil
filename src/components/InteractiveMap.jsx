@@ -13,6 +13,7 @@ import { formatDateTime, toMillis } from '@/lib/utils';
 import { CATEGORIAS_PUNTOS, LISTA_CATEGORIAS } from '@/lib/categories';
 import { ordenarPuntos } from '@/lib/orden';
 import { embedDeYouTube } from '@/lib/enVivo';
+import { obtenerRutas } from '@/lib/rutas';
 import { useI18n } from '@/lib/i18n';
 import { buildFullRoadPath } from '@/lib/routing';
 import TimelineSlider from './TimelineSlider';
@@ -134,15 +135,23 @@ export default function InteractiveMap() {
   const [roadPath, setRoadPath] = useState([]);
   const [roadLoading, setRoadLoading] = useState(false);
 
+  // Rutas del mapa para filtrar puntos
+  const [rutas, setRutas] = useState([]);
+  const [rutaSeleccionada, setRutaSeleccionada] = useState(null); // null = todas las rutas
+
   // Puntos en orden cronológico (manda la fecha: así viajan la ruta y el timeline)
   const puntos = useMemo(() => {
     if (loading) return [];
     const src = items.length ? items : demoPuntos;
-    return src
+    const filtrados = src
       .map((p) => ({ ...p, ts: toMillis(p.fechaHora) }))
-      .filter((p) => Number.isFinite(p.ts) && Number.isFinite(p.lat) && Number.isFinite(p.lng))
-      .sort((a, b) => a.ts - b.ts);
-  }, [items, loading]);
+      .filter((p) => Number.isFinite(p.ts) && Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    // Filtrar por ruta seleccionada
+    const rutaFiltrados = rutaSeleccionada
+      ? filtrados.filter((p) => p.rutaId === rutaSeleccionada)
+      : filtrados;
+    return rutaFiltrados.sort((a, b) => a.ts - b.ts);
+  }, [items, loading, rutaSeleccionada]);
 
   // Números de la bitácora (orden efectivo: `orden` si todos lo tienen, si no la fecha)
   const numeros = useMemo(() => {
@@ -205,6 +214,21 @@ export default function InteractiveMap() {
 
   // ---------- Objetivos en el mapa (bandera 🏁) ----------
   const { items: objetivos, loading: objetivosLoading } = useCollection('objetivos', 'creado', 'desc');
+
+  // Cargar rutas disponibles para filtrar en el mapa
+  const [rutasCargadas, setRutasCargadas] = useState([]);
+  useEffect(() => {
+    async function cargarRutas() {
+      try {
+        const data = await obtenerRutas();
+        setRutasCargadas(data);
+      } catch (err) {
+        console.error('[rutas] error cargando:', err);
+      }
+    }
+    cargarRutas();
+  }, []);
+
   // Rango del timeline
   const { start, end } = useMemo(() => {
     if (!puntos.length) return { start: 0, end: 1 };
@@ -804,6 +828,27 @@ export default function InteractiveMap() {
               <option value="hot">☀️ OSM Humanitario (Cálido)</option>
               <option value="topo">🏔️ OpenTopoMap (Relieve &amp; Andes)</option>
               <option value="cyclosm">🚲 CyclOSM (Rutas de Aventura)</option>
+            </select>
+          </div>
+
+          {/* Selector de ruta para filtrar puntos en el mapa */}
+          <div
+            className="relative grid h-9 w-9 place-items-center rounded-full border-2 border-noche bg-white/95 text-base shadow-comic-sm backdrop-blur-sm"
+            title={rutaSeleccionada ? rutasCargadas.find((r) => r.id === rutaSeleccionada)?.titulo : 'Todas las rutas'}
+          >
+            <span aria-hidden>🗺️</span>
+            <select
+              value={rutaSeleccionada || ''}
+              onChange={(e) => setRutaSeleccionada(e.target.value || null)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label="Filtrar por ruta"
+            >
+              <option value="">Todas las rutas</option>
+              {rutasCargadas.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.titulo || 'Ruta sin nombre'}
+                </option>
+              ))}
             </select>
           </div>
 
