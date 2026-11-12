@@ -11,9 +11,11 @@ import 'leaflet/dist/leaflet.css';
 export default function MiniMapa({ latitud, longitud, titulo }) {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!latitud || !longitud) return;
+    if (typeof window === 'undefined') return;
 
     const map = L.map(mapRef.current, {
       zoomControl: false,
@@ -31,10 +33,22 @@ export default function MiniMapa({ latitud, longitud, titulo }) {
 
     markerRef.current = marker;
 
+    setMapReady(true);
+
     return () => {
       map.remove();
     };
   }, [latitud, longitud]);
+
+  if (!mapReady) {
+    return (
+      <div className="w-full aspect-square rounded-2xl border-[3px] border-noche shadow-comic flex items-center justify-center text-center p-4">
+        <div className="text-sm font-semibold text-noche/60">
+          Mapa no disponible
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

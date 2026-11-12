@@ -2,70 +2,51 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { obtenerPublicacionesInstagram } from '@/lib/instagram';
 
 /**
  * Feed de Instagram - Muestra las últimas publicaciones.
- * Nota: Para usar datos reales de Instagram se requiere Access Token de Instagram Graph API.
- * Por ahora muestra datos de ejemplo que pueden ser reemplazados por datos reales.
+ * Intenta obtener datos reales de Instagram Graph API o de la página pública.
+ * Si no hay configuración, muestra datos de ejemplo con aviso.
  */
 export default function InstagramFeed({ cuenta = 'jerefijo', cantidad = 6 }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modoDemo, setModoDemo] = useState(false);
 
   useEffect(() => {
-    // En un entorno real, aquí se llamaría a la API de Instagram Graph API
-    // Con el access token correspondiente.
-    // Por ahora mostramos datos de ejemplo.
-    const demoPosts = [
-      {
-        id: 'ig1',
-        url: 'https://www.instagram.com/jerefijo/',
-        imagen: 'https://images.unsplash.com/photo-1469854523076-882547143777?w=400&h=400&fit=crop',
-        leyenda: 'Atardecer en la ruta 🌅',
-      },
-      {
-        id: 'ig2',
-        url: 'https://www.instagram.com/jerefijo/',
-        imagen: 'https://images.unsplash.com/photo-1506905925366-2e255474e445?w=400&h=400&fit=crop',
-        leyenda: 'La Bebi lista para carretera 🚐',
-      },
-      {
-        id: 'ig3',
-        url: 'https://www.instagram.com/jerefijo/',
-        imagen: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=400&fit=crop',
-        leyenda: 'Montañas del norte 🏔️',
-      },
-      {
-        id: 'ig4',
-        url: 'https://www.instagram.com/jerefijo/',
-        imagen: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=400&fit=crop',
-        leyenda: 'Lagos y paisajes 🌊',
-      },
-      {
-        id: 'ig5',
-        url: 'https://www.instagram.com/jerefijo/',
-        imagen: 'https://images.unsplash.com/photo-1470770753741-de97c97e2a16?w=400&h=400&fit=crop',
-        leyenda: 'Desierto y caminos 🏜️',
-      },
-      {
-        id: 'ig6',
-        url: 'https://www.instagram.com/jerefijo/',
-        imagen: 'https://images.unsplash.com/photo-1518285054465-732c27907d6d?w=400&h=400&fit=crop',
-        leyenda: 'Amanecer en ruta ☀️',
-      },
-    ];
-
-    setLoading(false);
-    setPosts(demoPosts.slice(0, cantidad));
-  }, [cuenta, cantidad]);
+    async function cargar() {
+      try {
+        const resultado = await obtenerPublicacionesInstagram(cantidad);
+        setPosts(resultado.datos);
+        setModoDemo(resultado.desde === 'demo');
+      } catch (err) {
+        console.error('[instagram] error:', err);
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    cargar();
+  }, [cantidad]);
 
   return (
     <section className="py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl font-extrabold text-noche">
-            Instagram
-          </h2>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full border-[2px] border-noche bg-crema flex items-center justify-center">
+              <span className="text-xs font-bold text-noche">📸</span>
+            </div>
+            <div>
+              <h2 className="font-display text-2xl font-extrabold text-noche">
+                Instagram
+              </h2>
+              <span className={`text-xs font-bold ${modoDemo ? 'text-rosa' : 'text-sol'}`}>
+                {modoDemo ? 'Modo de ejemplo' : 'En vivo'}
+              </span>
+            </div>
+          </div>
           <a
             href="https://www.instagram.com/jerefijo/"
             target="_blank"
@@ -76,14 +57,19 @@ export default function InstagramFeed({ cuenta = 'jerefijo', cantidad = 6 }) {
           </a>
         </div>
 
+        {modoDemo && (
+          <div className="mb-4 rounded-full border-2 border-dashed border-noche bg-crema px-4 py-2 text-sm font-bold text-noche/70">
+            ⚠️ Modo de ejemplo: configura INSTAGRAM_ACCESS_TOKEN y INSTAGRAM_ACCOUNT_ID en .env.local para ver publicaciones reales.
+          </div>
+        )}
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {posts.map((post) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              className="aspect-square overflow-hidden rounded-2xl border-[3px] border-noche shadow-comic cursor-pointer"
+              className="aspect-square overflow-hidden rounded-2xl border-[3px] border-noche shadow-comic cursor-pointer group"
             >
               <a
                 href={post.url}
@@ -93,7 +79,7 @@ export default function InstagramFeed({ cuenta = 'jerefijo', cantidad = 6 }) {
               >
                 <img
                   src={post.imagen}
-                  alt={post.leyenda}
+                  alt={post.leyenda || 'Publicación de Instagram'}
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
@@ -106,6 +92,14 @@ export default function InstagramFeed({ cuenta = 'jerefijo', cantidad = 6 }) {
               </a>
             </motion.div>
           ))}
+          {posts.length === 0 && (
+            <div className="col-span-full flex flex-col items-center justify-center py-12">
+              <div className="text-4xl mb-2" aria-hidden>📸</div>
+              <p className="text-sm font-semibold text-noche/70">
+                No hay publicaciones para mostrar.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>

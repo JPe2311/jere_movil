@@ -79,5 +79,17 @@ service cloud.firestore {
         allow write: if isAdmin();
       }
     }
+
+    // Videos de la bitácora: lectura pública, escritura solo admin
+    match /videos/{videoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Contactos de la web: escritura pública, lectura solo admin
+    match /contactos/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+    }
   }
 }
