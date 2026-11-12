@@ -30,8 +30,6 @@ export default function HeroSlider({ slides }) {
         alt={slide.titulo}
         className="w-full h-full object-cover"
         style={{ filter: 'brightness(0.85)' }}
-        layout="fill"
-        objectFit="cover"
       />
       <motion.div
         initial={{ y: 20, opacity: 0 }}

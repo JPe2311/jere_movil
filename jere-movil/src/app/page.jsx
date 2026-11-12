@@ -1,17 +1,23 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { useI18n } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
 
 import HeroSlider from '@/components/home/HeroSlider';
 import InstagramFeed from '@/components/home/InstagramFeed';
 import UltimoVideo from '@/components/home/UltimoVideo';
 import ContactoForm from '@/components/home/ContactoForm';
-import MiniMapa from '@/components/home/MiniMapa';
+
+// Leaflet toca `window` al importarse, así que este mapa se carga solo en el navegador.
+const MiniMapa = dynamic(() => import('@/components/home/MiniMapa'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex aspect-square w-full items-center justify-center rounded-2xl border-[3px] border-noche shadow-comic">
+      <span className="text-sm font-semibold text-noche/60">Cargando mapa…</span>
+    </div>
+  ),
+});
 
 export default function HomePage() {
-  const { t } = useI18n();
-
   const slides = [
     {
       titulo: '¡Bienvenidos a Jere Móvil!',
@@ -42,42 +48,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-crema text-noche">
-      {/* Navbar superior simplificada */}
-      <header className="fixed top-0 w-full z-[1000] bg-sol/90 backdrop-blur-sm border-b-[2px] border-noche">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <img src="/logo_jere.png" alt="Logo Jere Móvil" className="h-8 w-8 object-contain" />
-              <span className="font-display text-xl font-extrabold text-noche">Jere Móvil</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="/" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
-                Inicio
-              </a>
-              <a href="/mapa" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
-                Mapa
-              </a>
-              <a href="/quien-soy" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
-                Quién soy
-              </a>
-              <a href="/videos" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
-                Videos
-              </a>
-              <a href="/recursos" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
-                Recursos
-              </a>
-              <a href="/redes" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
-                Mis redes
-              </a>
-              <a href="/admin" className="border-2 border-noche bg-rosa px-3 py-1 text-xs font-extrabold text-white rounded-full shadow-comic-sm">
-                Admin
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <main className="pt-24 pb-12 px-[150px]">
+      <main className="pt-8 pb-12 px-4 sm:px-8 lg:px-[150px]">
         {/* Hero Slider */}
         <section className="mb-12">
           <HeroSlider slides={slides} />

@@ -69,7 +69,7 @@ export default function InstagramFeed({ cuenta = 'jerefijo', cantidad = 6 }) {
               key={post.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="aspect-square overflow-hidden rounded-2xl border-[3px] border-noche shadow-comic cursor-pointer group"
+              className="relative aspect-square overflow-hidden rounded-2xl border-[3px] border-noche shadow-comic cursor-pointer group"
             >
               <a
                 href={post.url}

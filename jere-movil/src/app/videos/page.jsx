@@ -39,7 +39,7 @@ export default function VideosPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', damping: 15 }}
-      className="mx-auto max-w-3xl space-y-8 px-[150px] py-10"
+      className="mx-auto max-w-3xl space-y-8 px-4 sm:px-12 lg:px-[150px] py-10"
     >
       <motion.header
         initial={{ opacity: 0, y: -16 }}

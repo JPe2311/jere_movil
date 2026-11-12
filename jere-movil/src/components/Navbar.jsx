@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from './AuthProvider';
 
 const baseLinks = [
-  { href: '/', key: 'nav_home', emoji: '🗺️' },
+  { href: '/', key: 'nav_home', emoji: '🏠' },
+  { href: '/mapa', key: 'nav_map', emoji: '🗺️' },
   { href: '/quien-soy', key: 'nav_about', emoji: '🙋' },
   { href: '/videos', key: 'nav_videos', emoji: '🎬' },
   { href: '/recursos', key: 'nav_resources', emoji: '🎁' },

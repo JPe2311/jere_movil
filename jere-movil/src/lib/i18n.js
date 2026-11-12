@@ -6,6 +6,7 @@ const dict = {
   es: {
     brand: 'Jere Móvil',
     nav_home: 'Mi viaje',
+    nav_map: 'Mapa',
     nav_about: 'Quién soy',
     nav_videos: 'Videos',
     nav_resources: 'Recursos',
@@ -124,6 +125,7 @@ const dict = {
   en: {
     brand: 'Jere Móvil',
     nav_home: 'My trip',
+    nav_map: 'Map',
     nav_about: 'Who am I',
     nav_videos: 'Videos',
     nav_resources: 'Resources',

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { doc, setDoc } from 'firebase/firestore';
+import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 /**
@@ -22,7 +22,8 @@ export default function ContactoForm() {
 
     setEnviando(true);
     try {
-      await setDoc(doc(db, 'contactos'), {
+      if (!db) throw new Error('Firebase no configurado');
+      await addDoc(collection(db, 'contactos'), {
         nombre: nombre.trim(),
         email: email.trim(),
         mensaje: mensaje.trim(),
@@ -34,7 +35,9 @@ export default function ContactoForm() {
       setEmail('');
       setMensaje('');
     } catch (err) {
+      console.error('[contacto] error:', err);
       alert('No se pudo enviar el mensaje. Inténtalo de nuevo.');
+    } finally {
       setEnviando(false);
     }
   }
