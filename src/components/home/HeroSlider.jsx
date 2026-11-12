@@ -50,7 +50,6 @@ export default function HeroSlider({ slides }) {
             {slide.descripcion}
           </p>
         </div>
-
         {slide.url && (
           <button
             type="button"
