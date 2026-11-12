@@ -18,7 +18,7 @@ export default function RedesPage() {
   const { t, lang } = useI18n();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-10">
+    <div className="mx-auto max-w-2xl space-y-6 px-[150px] py-10">
       <header className="text-center">
         <motion.div animate={{ rotate: [0, -8, 8, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="mb-2 text-6xl" aria-hidden>
           📲

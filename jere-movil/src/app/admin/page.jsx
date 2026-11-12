@@ -64,7 +64,7 @@ export default function AdminPage() {
   const Active = tabs.find((t) => t.id === tab).C;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
+    <div className="mx-auto max-w-4xl space-y-6 px-[150px] py-10">
       <header>
         <h1 className="page-title">⚙️ Panel de Jere</h1>
         <p className="font-semibold">Todo lo que cargues acá aparece al instante en la web.</p>

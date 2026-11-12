@@ -41,7 +41,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+      <main className="pt-24 pb-12 px-[150px]">
         {/* Hero Banner */}
         <section className="mb-12">
           <motion.div
