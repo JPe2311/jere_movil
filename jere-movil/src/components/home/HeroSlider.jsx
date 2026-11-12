@@ -1,78 +1,107 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 export default function HeroSlider({ slides }) {
   const [index, setIndex] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(true);
+  const [imgError, setImgError] = useState(false);
+  // La imagen se monta recién en el cliente: así el `onError` siempre está
+  // enganchado antes de que el navegador intente cargarla.
+  const [montado, setMontado] = useState(false);
 
   useEffect(() => {
-    if (!autoPlay) return;
+    setMontado(true);
+  }, []);
+
+  useEffect(() => {
     const id = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(id);
-  }, [autoPlay, slides.length]);
+  }, [slides.length]);
+
+  // Si cambia la imagen, reintentamos la carga.
+  useEffect(() => {
+    setImgError(false);
+  }, [index]);
 
   const slide = slides[index];
+  if (!slide) return null;
+
+  function ir(url) {
+    if (!url) return;
+    if (url.startsWith('http')) window.open(url, '_blank', 'noopener');
+    else window.location.href = url;
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="relative w-full aspect-video overflow-hidden rounded-2xl border-[3px] border-noche shadow-comic bg-crema"
-    >
-      <motion.img
-        src={slide.imagen}
-        alt={slide.titulo}
-        className="w-full h-full object-cover"
-        style={{ filter: 'brightness(0.85)' }}
+    <div className="relative w-full aspect-video overflow-hidden rounded-2xl border-[3px] border-noche shadow-comic bg-crema">
+      {/* Fondo de respaldo (se ve si no hay imagen o si no carga) */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${
+          slide.degradado || 'from-cielo via-sol to-rosa'
+        }`}
       />
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="absolute inset-0 flex items-end justify-between p-6 sm:p-8"
-      >
-        <div className="text-noche">
-          <span className="inline-block rounded-full border-2 border-noche bg-sol px-3 py-1 text-xs font-extrabold text-white mb-2">
+
+      {montado && !imgError && slide.imagen ? (
+        <motion.img
+          key={slide.imagen}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          src={slide.imagen}
+          alt={slide.titulo}
+          onError={() => setImgError(true)}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ filter: 'brightness(0.8)' }}
+        />
+      ) : (
+        <div className="absolute inset-0 grid place-items-center text-[7rem] sm:text-[9rem]" aria-hidden>
+          {slide.emoji || '🚐'}
+        </div>
+      )}
+
+      {/* Degradado para que el texto se lea siempre */}
+      <div className="absolute inset-0 bg-gradient-to-t from-noche/80 via-noche/20 to-transparent" />
+
+      <div className="absolute inset-0 flex flex-col justify-end gap-4 p-6 sm:p-8 md:flex-row md:items-end md:justify-between">
+        <div>
+          <span className="mb-2 inline-block rounded-full border-2 border-noche bg-sol px-3 py-1 text-xs font-extrabold text-white">
             {slide.etiqueta || 'Viaje'}
           </span>
-          <h2 className="font-display text-3xl font-extrabold text-white text-shadow-sm">
+          <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl">
             {slide.titulo}
           </h2>
-          <p className="text-lg font-semibold text-white mt-2 max-w-md">
+          <p className="mt-2 max-w-md text-base font-semibold text-white/90 sm:text-lg">
             {slide.descripcion}
           </p>
         </div>
+
         {slide.url && (
           <button
             type="button"
-            onClick={() => {
-              if (slide.url.startsWith('http')) {
-                window.open(slide.url, '_blank');
-              } else {
-                window.location.href = slide.url;
-              }
-            }}
-            className="flex items-center gap-2 px-5 py-2 rounded-full border-2 border-noche bg-sol text-white font-extrabold text-sm shadow-comic-sm hover:bg-yellow-300 transition-transform active:scale-95"
+            onClick={() => ir(slide.url)}
+            className="w-full shrink-0 rounded-full border-2 border-noche bg-sol px-5 py-2 text-sm font-extrabold text-white shadow-comic-sm transition-transform hover:bg-yellow-300 active:scale-95 md:w-auto"
           >
-            {slide.textoBoton || 'Ver mas'}
+            {slide.textoBoton || 'Ver más →'}
           </button>
         )}
-      </motion.div>
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      </div>
+
+      <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
         {slides.map((_, i) => (
           <button
             key={i}
             type="button"
             onClick={() => setIndex(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${i === index ? 'bg-sol' : 'bg-white/50'}`}
+            aria-label={`Ir a la imagen ${i + 1}`}
+            className={`h-2.5 w-2.5 rounded-full border border-noche transition-colors ${
+              i === index ? 'bg-sol' : 'bg-white/60'
+            }`}
           />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -1,45 +1,52 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useEffect, useMemo } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import { useRouter } from 'next/navigation';
+import LoginWall from '@/components/LoginWall';
+import { obtenerVideos } from '@/lib/ultimoVideo';
 
 export default function VideosPage() {
-  const { user, termsAccepted, youtubeSubscribed, instagramSubscribed } = useAuth();
+  const { termsAccepted, youtubeSubscribed, instagramSubscribed } = useAuth();
 
-  // useMemo para evitar recomputaciones si los valores no cambian
-  const puedeVer = useMemo(() => termsAccepted && youtubeSubscribed && instagramSubscribed, [
-    termsAccepted,
-    youtubeSubscribed,
-    instagramSubscribed,
-  ]);
+  const puedeVer = useMemo(
+    () => termsAccepted && youtubeSubscribed && instagramSubscribed,
+    [termsAccepted, youtubeSubscribed, instagramSubscribed]
+  );
 
-  const router = useRouter();
+  const [videos, setVideos] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    if (!puedeVer) {
-      const authorized = window.confirm(
-        'Para ver los videos necesitás estar registrado, aceptar los Términos y Condiciones, y seguí nuestro canal de YouTube e Instagram.'
-      );
-      if (authorized) {
-        // Marcaríamos los states, pero el LoginWall se encargará de mostrarlo
-        router.push('/');
-      } else {
-        router.push('/');
-      }
-    }
-  }, [puedeVer, router]);
+    if (!puedeVer) return undefined;
+    let activo = true;
+    setCargando(true);
+    obtenerVideos()
+      .then((lista) => {
+        if (activo) setVideos(lista);
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+    return () => {
+      activo = false;
+    };
+  }, [puedeVer]);
 
-  // Si no puede ver, renderizar nada (el LoginWall manejará el UI)
-  if (!puedeVer) return null;
+  if (!puedeVer) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16">
+        <LoginWall />
+      </div>
+    );
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', damping: 15 }}
-      className="mx-auto max-w-3xl space-y-8 px-4 sm:px-12 lg:px-[150px] py-10"
+      className="mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-12 lg:px-[150px]"
     >
       <motion.header
         initial={{ opacity: 0, y: -16 }}
@@ -50,20 +57,62 @@ export default function VideosPage() {
           🎬
         </div>
         <h1 className="page-title">Videos</h1>
+        <p className="mt-2 font-semibold text-noche/70">
+          Todos los capítulos del viaje, de la ruta a la pantalla.
+        </p>
       </motion.header>
 
-      <div className="prose max-w-prose mx-auto">
-        <h2 className="font-display text-2xl font-extrabold">Contenido de Video</h2>
-        <p className="text-lg">
-          Aquí estarían tus videos de viaje. Para acceder a esta sección necesitás:
-        </p>
-        <ul className="list-disc list-inside text-noche/70">
-          <li>✅ Estar registrado</li>
-          <li>✅ Aceptar los Términos y Condiciones</li>
-          <li>✅ Seguí nuestro canal de YouTube</li>
-          <li>✅ Seguí nuestra cuenta de Instagram</li>
-        </ul>
-      </div>
+      {cargando && (
+        <div className="flex items-center justify-center gap-2 py-10">
+          <div className="h-8 w-8 animate-pulse rounded-full border-2 border-dashed border-noche" />
+          <span className="text-sm font-bold text-noche/60">Cargando videos…</span>
+        </div>
+      )}
+
+      {!cargando && videos.length === 0 && (
+        <div className="card-comic p-8 text-center">
+          <div className="mb-2 text-3xl" aria-hidden>📼</div>
+          <p className="font-display text-lg font-extrabold">Todavía no hay videos</p>
+          <p className="mt-1 text-sm font-semibold text-noche/70">
+            Cuando suba un capítulo nuevo, va a aparecer acá.
+          </p>
+        </div>
+      )}
+
+      {!cargando && videos.length > 0 && (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {videos.map((v) => (
+            <motion.a
+              key={v.id}
+              href={`https://www.youtube.com/watch?v=${v.youtubeId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="group overflow-hidden rounded-2xl border-[3px] border-noche bg-white shadow-comic transition-transform hover:-translate-y-0.5"
+            >
+              <div className="relative aspect-video overflow-hidden bg-noche">
+                <img
+                  src={`https://i.ytimg.com/vi/${v.youtubeId}/hqdefault.jpg`}
+                  alt={v.titulo}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <span className="absolute inset-0 grid place-items-center text-4xl drop-shadow" aria-hidden>
+                  ▶️
+                </span>
+              </div>
+              <div className="space-y-1 p-4">
+                <span className="inline-block rounded-full border-2 border-noche bg-sol px-2 py-0.5 text-[10px] font-extrabold text-white">
+                  T{v.temporada} · E{v.episodio}
+                </span>
+                <h2 className="font-display text-lg font-extrabold leading-tight text-noche">{v.titulo}</h2>
+                {v.fecha && <p className="text-xs font-bold text-noche/50">{v.fecha}</p>}
+              </div>
+            </motion.a>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }

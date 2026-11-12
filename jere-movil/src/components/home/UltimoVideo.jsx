@@ -98,10 +98,12 @@ export default function UltimoVideo() {
                 {video.descripcion}
               </p>
             </div>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-full border-2 border-noche bg-crema">
-              <span className="text-xs font-bold text-noche">📅</span>
-              <span className="text-sm font-bold text-noche">{video.fecha}</span>
-            </div>
+            {video.fecha && (
+              <div className="flex items-center gap-3 px-3 py-2 rounded-full border-2 border-noche bg-crema">
+                <span className="text-xs font-bold text-noche">📅</span>
+                <span className="text-sm font-bold text-noche">{video.fecha}</span>
+              </div>
+            )}
             <a
               href={youtubeUrl}
               target="_blank"
