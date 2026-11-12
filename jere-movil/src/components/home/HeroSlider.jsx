@@ -64,7 +64,7 @@ export default function HeroSlider({ slides }) {
             {slide.textoBoton || 'Ver mas'}
           </button>
         )}
-      </div>
+      </motion.div>
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
         {slides.map((_, i) => (
           <button
