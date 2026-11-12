@@ -74,9 +74,7 @@ export default function HeroSlider({ slides }) {
             key={i}
             type="button"
             onClick={() => setIndex(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${
-              i === index ? 'bg-sol' : 'bg-white/50'
-            }`}
+            className={`w-2.5 h-2.5 rounded-full transition-colors ${i === index ? 'bg-sol' : 'bg-white/50'}`}
           />
         ))}
       </div>
