@@ -1,17 +1,122 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import MapSection from '@/components/MapSection';
+import { useI18n } from '@/lib/i18n';
+
+import HeroSlider from '@/components/home/HeroSlider';
+import InstagramFeed from '@/components/home/InstagramFeed';
+import UltimoVideo from '@/components/home/UltimoVideo';
+import ContactoForm from '@/components/home/ContactoForm';
+import MiniMapa from '@/components/home/MiniMapa';
 
 export default function HomePage() {
+  const { t } = useI18n();
+
+  const slides = [
+    {
+      titulo: '¡Bienvenidos a Jere Móvil!',
+      descripcion: 'Recorriendo América en La Bebi, nuestra casa sobre ruedas.',
+      emoji: '🚐',
+      imagen: 'https://images.unsplash.com/photo-1469854523076-882547143777?w=1200&h=600&fit=crop',
+      etiqueta: 'Inicio',
+    },
+    {
+      titulo: 'La Bebi en la ruta',
+      descripcion: 'Noches de acampada y paisajes inolvidables en el camino.',
+      imagen: 'https://images.unsplash.com/photo-1506905925366-2e255474e445?w=1200&h=600&fit=crop',
+      etiqueta: 'La Bebi',
+    },
+    {
+      titulo: 'Montañas del Norte',
+      descripcion: 'Cruzando los Andes hacia Chile y Bolivia.',
+      imagen: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&h=600&fit=crop',
+      etiqueta: 'Montañas',
+    },
+    {
+      titulo: 'Atardeceres de viaje',
+      descripcion: 'Cada día termina con un espectáculo único en el horizonte.',
+      imagen: 'https://images.unsplash.com/photo-1470770753741-de97c97e2a16?w=1200&h=600&fit=crop',
+      etiqueta: 'Paisajes',
+    },
+  ];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', damping: 15 }}
-      className="relative h-[calc(100dvh-4rem)] w-full overflow-hidden bg-crema"
-    >
-      <MapSection />
-    </motion.div>
+    <div className="min-h-screen bg-crema text-noche">
+      {/* Navbar superior simplificada */}
+      <header className="fixed top-0 w-full z-[1000] bg-sol/90 backdrop-blur-sm border-b-[2px] border-noche">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <img src="/logo_jere.png" alt="Logo Jere Móvil" className="h-8 w-8 object-contain" />
+              <span className="font-display text-xl font-extrabold text-noche">Jere Móvil</span>
+            </div>
+            <nav className="hidden md:flex items-center gap-6">
+              <a href="/" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
+                Inicio
+              </a>
+              <a href="/mapa" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
+                Mapa
+              </a>
+              <a href="/quien-soy" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
+                Quién soy
+              </a>
+              <a href="/videos" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
+                Videos
+              </a>
+              <a href="/recursos" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
+                Recursos
+              </a>
+              <a href="/redes" className="border-2 border-noche bg-white px-3 py-1 text-xs font-extrabold rounded-full shadow-comic-sm">
+                Mis redes
+              </a>
+              <a href="/admin" className="border-2 border-noche bg-rosa px-3 py-1 text-xs font-extrabold text-white rounded-full shadow-comic-sm">
+                Admin
+              </a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main className="pt-24 pb-12 px-[150px]">
+        {/* Hero Slider */}
+        <section className="mb-12">
+          <HeroSlider slides={slides} />
+        </section>
+
+        {/* Último video */}
+        <UltimoVideo />
+
+        {/* Instagram */}
+        <InstagramFeed cuenta="jerefijo" cantidad={6} />
+
+        {/* Contacto y Mapa Mini */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <ContactoForm />
+          <MiniMapa latitud={-24.7} longitud={-65.4} titulo="Última ubicación: Villa de Soto" />
+        </div>
+      </main>
+
+      <footer className="border-t-[2px] border-noche bg-sol py-8 mt-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <img src="/logo_jere.png" alt="Logo Jere Móvil" className="h-6 w-6 object-contain" />
+              <span className="font-display text-lg font-extrabold text-noche">Jere Móvil</span>
+            </div>
+            <p className="text-sm text-noche/70 text-center md:text-left">
+              Bitácora de viaje interactiva · Viajar con La Bebi por América
+            </p>
+            <div className="flex gap-3">
+              <a href="https://www.instagram.com/jerefijo/" target="_blank" rel="noopener noreferrer" className="text-noche/60 hover:text-noche transition">
+                Instagram
+              </a>
+              <a href="https://www.youtube.com/@JereMovil" target="_blank" rel="noopener noreferrer" className="text-noche/60 hover:text-noche transition">
+                YouTube
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
