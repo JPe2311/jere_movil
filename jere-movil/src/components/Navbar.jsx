@@ -11,6 +11,7 @@ import { useAuth } from './AuthProvider';
 const baseLinks = [
   { href: '/', key: 'nav_home', emoji: '🏠' },
   { href: '/mapa', key: 'nav_map', emoji: '🗺️' },
+  { href: '/publicidad', key: 'nav_publicidad', emoji: '📣' },
   { href: '/quien-soy', key: 'nav_about', emoji: '🙋' },
   { href: '/videos', key: 'nav_videos', emoji: '🎬' },
   { href: '/recursos', key: 'nav_resources', emoji: '🎁' },
@@ -45,13 +46,13 @@ export default function Navbar() {
           </motion.span>
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden items-center gap-0.5 lg:flex xl:gap-1">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className={cn(
-                'rounded-full border-2 px-3 py-1 font-display text-sm font-bold transition',
+                'whitespace-nowrap rounded-full border-2 px-2 py-1 font-display text-[13px] font-bold transition xl:px-3 xl:text-sm',
                 isActive(l.href)
                   ? 'border-noche bg-white shadow-comic-sm'
                   : 'border-transparent hover:border-noche hover:bg-white/60'

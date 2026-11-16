@@ -1,0 +1,220 @@
+'use client';
+
+/**
+ * Catálogo del tarifario de publicidad (Media Kit Jere Móvil).
+ * Se puede editar desde el "Modo edición" de /publicidad y queda guardado
+ * en localStorage con una clave versionada. Los valores base son los del
+ * documento original.
+ */
+
+export const CLAVE_TARIFARIO = 'jeremovil_tarifario_v1';
+
+export const PAQUETES_BASE = [
+  {
+    id: 'explorador',
+    nombre: 'EXPLORADOR',
+    subtitulo: 'Para empezar a rodar',
+    precio: 600000,
+    destacado: false,
+    activo: true,
+    incluye: [
+      'Mención de apertura (10-15 seg)',
+      'Agradecimiento en créditos (10 seg)',
+      '1 Short/Reels',
+    ],
+  },
+  {
+    id: 'aventurero',
+    nombre: 'AVENTURERO',
+    subtitulo: 'El más elegido',
+    precio: 850000,
+    destacado: true,
+    activo: true,
+    incluye: [
+      'Todo lo del Explorador',
+      'Banner de 1 min en video',
+      '2 posts + 2 sets de stories',
+      'Banner en la web por 30 días',
+    ],
+  },
+  {
+    id: 'leyenda',
+    nombre: 'LEYENDA',
+    subtitulo: 'Ruta completa',
+    precio: 1500000,
+    destacado: false,
+    activo: true,
+    incluye: [
+      'Todo lo del Aventurero',
+      'Integración orgánica (~1 min) con banner central',
+      'Marca en La Bebi por 60 días',
+      'Sección de marca en la web (90 días)',
+    ],
+  },
+];
+
+export const SERVICIOS_BASE = [
+  {
+    id: 'mencion-apertura',
+    nombre: 'Mención de apertura',
+    detalle: 'En la introducción del capítulo. 10-15 seg',
+    precio: 150000,
+    activo: true,
+  },
+  {
+    id: 'integracion-organica',
+    nombre: 'Integración orgánica',
+    detalle: 'Uso del producto en escena real ~1 min',
+    precio: 900000,
+    activo: true,
+  },
+  {
+    id: 'banner-apertura',
+    nombre: 'Banner de apertura',
+    detalle: 'Logo o gráfico discreto 10 seg',
+    precio: 100000,
+    activo: true,
+  },
+  {
+    id: 'banner',
+    nombre: 'Banner',
+    detalle: 'En cualquier espacio del video (no central) - 15 seg',
+    precio: 150000,
+    activo: true,
+  },
+  {
+    id: 'banner-central',
+    nombre: 'Banner central',
+    detalle: 'Momento medio del capítulo. 15 seg',
+    precio: 300000,
+    activo: true,
+  },
+  {
+    id: 'banner-cierre',
+    nombre: 'Banner de cierre',
+    detalle: 'Junto al "Agradecemos a...". 10 seg',
+    precio: 150000,
+    activo: true,
+  },
+  {
+    id: 'creditos',
+    nombre: 'Agradecimiento en créditos',
+    detalle: 'Logo, nombre y link 10 seg',
+    precio: 100000,
+    activo: true,
+  },
+  {
+    id: 'link-descripcion',
+    nombre: 'Link en descripción + fijado',
+    detalle: 'Mientras el video esté publicado',
+    precio: 250000,
+    activo: true,
+  },
+  {
+    id: 'post-feed',
+    nombre: 'Post en feed',
+    detalle: 'Publicación con mención y link',
+    precio: 200000,
+    activo: true,
+  },
+  {
+    id: 'set-stories',
+    nombre: 'Set de stories',
+    detalle: '3 stories con mención y link (1 mes)',
+    precio: 180000,
+    activo: true,
+  },
+  {
+    id: 'marca-exterior',
+    nombre: 'Marca en La Bebi (exterior)',
+    detalle: 'Calco/logo visible en la furgoneta 60 días',
+    precio: 300000,
+    activo: true,
+  },
+  {
+    id: 'marca-conduccion',
+    nombre: 'Marca en La Bebi (conducción)',
+    detalle: 'Calco/logo visible detrás del conductor 30 días',
+    precio: 500000,
+    activo: true,
+  },
+];
+
+export function catalogoOriginal() {
+  return {
+    paquetes: JSON.parse(JSON.stringify(PAQUETES_BASE)),
+    servicios: JSON.parse(JSON.stringify(SERVICIOS_BASE)),
+  };
+}
+
+function normalizar(guardado) {
+  const base = catalogoOriginal();
+  if (!guardado || typeof guardado !== 'object') return base;
+
+  const paquetes = Array.isArray(guardado.paquetes)
+    ? guardado.paquetes.filter((p) => p && p.id).map((p) => ({
+        id: String(p.id),
+        nombre: p.nombre ?? '',
+        subtitulo: p.subtitulo ?? '',
+        precio: Number(p.precio) || 0,
+        destacado: Boolean(p.destacado),
+        activo: p.activo !== false,
+        incluye: Array.isArray(p.incluye) ? p.incluye.map(String) : [],
+      }))
+    : base.paquetes;
+
+  const servicios = Array.isArray(guardado.servicios)
+    ? guardado.servicios.filter((s) => s && s.id).map((s) => ({
+        id: String(s.id),
+        nombre: s.nombre ?? '',
+        detalle: s.detalle ?? '',
+        precio: Number(s.precio) || 0,
+        activo: s.activo !== false,
+      }))
+    : base.servicios;
+
+  return { paquetes, servicios };
+}
+
+export function cargarTarifario() {
+  if (typeof window === 'undefined') return catalogoOriginal();
+  try {
+    const raw = window.localStorage.getItem(CLAVE_TARIFARIO);
+    if (!raw) return catalogoOriginal();
+    return normalizar(JSON.parse(raw));
+  } catch {
+    return catalogoOriginal();
+  }
+}
+
+export function guardarTarifario(tarifario) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(CLAVE_TARIFARIO, JSON.stringify(tarifario));
+  } catch {
+    /* sin localStorage: los cambios valen solo para esta sesión */
+  }
+}
+
+export function borrarTarifario() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(CLAVE_TARIFARIO);
+  } catch {
+    /* nada */
+  }
+}
+
+const formatoARS = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  maximumFractionDigits: 0,
+});
+
+export function precioARS(valor) {
+  return formatoARS.format(Number(valor) || 0);
+}
+
+export function nuevoId(prefijo) {
+  return `${prefijo}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
