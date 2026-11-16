@@ -138,7 +138,7 @@ export const SERVICIOS_BASE = [
     precio: 500000,
     activo: true,
   },
-];
+].map((servicio) => ({ ...servicio, foto: '' }));
 
 export function catalogoOriginal() {
   return {
@@ -168,6 +168,7 @@ function normalizar(guardado) {
         id: String(s.id),
         nombre: s.nombre ?? '',
         detalle: s.detalle ?? '',
+        foto: typeof s.foto === 'string' ? s.foto : '',
         precio: Number(s.precio) || 0,
         activo: s.activo !== false,
       }))
@@ -188,11 +189,13 @@ export function cargarTarifario() {
 }
 
 export function guardarTarifario(tarifario) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return false;
   try {
     window.localStorage.setItem(CLAVE_TARIFARIO, JSON.stringify(tarifario));
+    return true;
   } catch {
-    /* sin localStorage: los cambios valen solo para esta sesión */
+    /* sin espacio o sin localStorage: los cambios valen solo para esta sesión */
+    return false;
   }
 }
 
@@ -217,4 +220,41 @@ export function precioARS(valor) {
 
 export function nuevoId(prefijo) {
   return `${prefijo}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/**
+ * Convierte una foto elegida por el usuario en un data URL liviano
+ * (máximo 720 px de lado, JPEG 75%) para poder guardarla en localStorage
+ * junto con el resto del tarifario.
+ */
+export function imagenADataUrl(file, maxLado = 720, calidad = 0.75) {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined' || !file) {
+      reject(new Error('No hay archivo para procesar.'));
+      return;
+    }
+    if (!String(file.type || '').startsWith('image/')) {
+      reject(new Error('El archivo tiene que ser una imagen.'));
+      return;
+    }
+    const lector = new FileReader();
+    lector.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    lector.onload = () => {
+      const img = new window.Image();
+      img.onerror = () => reject(new Error('La imagen no es válida.'));
+      img.onload = () => {
+        const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * escala));
+        canvas.height = Math.max(1, Math.round(img.height * escala));
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', calidad));
+      };
+      img.src = lector.result;
+    };
+    lector.readAsDataURL(file);
+  });
 }

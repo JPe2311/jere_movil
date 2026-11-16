@@ -75,6 +75,7 @@ export function generarPresupuestoPDF(datos) {
     .map(
       (i) => `
         <div class="item">
+          ${i.foto ? `<img class="item-foto" src="${esc(i.foto)}" alt="" />` : ''}
           <div class="item-info">
             <div class="item-nombre">${esc(i.nombre)}${i.cantidad > 1 ? ` <span class="qty">x${i.cantidad}</span>` : ''}</div>
             ${i.detalle ? `<div class="item-detalle">${esc(i.detalle)}</div>` : ''}
@@ -122,7 +123,9 @@ export function generarPresupuestoPDF(datos) {
   .num { width: 20px; height: 20px; border-radius: 999px; border: 2px solid ${PALETA.tinta}; background: ${PALETA.naranja}; color: #fff; display: grid; place-items: center; font-size: 10px; font-weight: 800; }
   .bloque-titulo h2 { font-size: 13px; text-transform: uppercase; }
 
-  .item { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; background: ${PALETA.blanco}; border: 2px solid ${PALETA.tinta}; border-radius: 10px; box-shadow: 3px 3px 0 0 ${PALETA.tinta}; padding: 8px 11px; margin-bottom: 8px; break-inside: avoid; }
+  .item { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: ${PALETA.blanco}; border: 2px solid ${PALETA.tinta}; border-radius: 10px; box-shadow: 3px 3px 0 0 ${PALETA.tinta}; padding: 8px 11px; margin-bottom: 8px; break-inside: avoid; }
+  .item-foto { width: 24mm; height: 16mm; flex: 0 0 auto; border: 2px solid ${PALETA.tinta}; border-radius: 6px; background: #fff; object-fit: cover; }
+  .item-info { flex: 1; }
   .item-nombre { font-size: 11.5px; font-weight: 800; }
   .item-detalle { font-size: 9.5px; color: ${PALETA.gris}; font-weight: 600; margin-top: 1px; }
   .item-precio { font-size: 12px; font-weight: 800; white-space: nowrap; }

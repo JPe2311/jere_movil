@@ -5,6 +5,7 @@ import {
   borrarTarifario,
   cargarTarifario,
   guardarTarifario,
+  imagenADataUrl,
   nuevoId,
   precioARS,
 } from '@/lib/tarifario';
@@ -37,6 +38,34 @@ function Switch({ activo, onChange, titulo }) {
   );
 }
 
+/**
+ * Foto de ejemplo del servicio. Si todavía no se cargó, deja el contenedor
+ * vacío con la estética del media kit para que se vea dónde va la imagen.
+ */
+function FotoServicio({ foto, nombre, className = 'h-16 w-24' }) {
+  if (foto) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={foto}
+        alt={`Foto de ejemplo de ${nombre}`}
+        className={`${className} shrink-0 rounded-lg border-2 border-[#1E2433] bg-white object-cover shadow-[2px_2px_0_0_#1E2433]`}
+      />
+    );
+  }
+  return (
+    <div
+      className={`${className} flex shrink-0 flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#CBD5E1] bg-[#FFF9EC] text-center text-[9px] font-bold leading-tight text-[#5A6275]`}
+      title="Todavía no hay foto de ejemplo"
+    >
+      <span className="text-base leading-none" aria-hidden>
+        📷
+      </span>
+      <span className="mt-0.5 px-1">Foto de ejemplo</span>
+    </div>
+  );
+}
+
 export default function Presupuestador() {
   const [tarifario, setTarifario] = useState(null);
   const [edicion, setEdicion] = useState(false);
@@ -44,6 +73,7 @@ export default function Presupuestador() {
   const [carrito, setCarrito] = useState({});
   const [descuento, setDescuento] = useState(0);
   const [descuentoManual, setDescuentoManual] = useState(false);
+  const [avisoGuardado, setAvisoGuardado] = useState(false);
   const [cliente, setCliente] = useState({
     marca: '',
     campania: '',
@@ -57,7 +87,7 @@ export default function Presupuestador() {
   }, []);
 
   useEffect(() => {
-    if (tarifario) guardarTarifario(tarifario);
+    if (tarifario) setAvisoGuardado(!guardarTarifario(tarifario));
   }, [tarifario]);
 
   const paqueteSel = tarifario?.paquetes.find((p) => p.id === paqueteId && p.activo) || null;
@@ -80,6 +110,7 @@ export default function Presupuestador() {
         key: `srv-${s.id}`,
         nombre: s.nombre,
         detalle: s.detalle,
+        foto: s.foto,
         cantidad: cant,
         unitario: s.precio,
         subtotal: s.precio * cant,
@@ -193,9 +224,26 @@ export default function Presupuestador() {
       ...t,
       servicios: [
         ...t.servicios,
-        { id, nombre: 'Nuevo servicio', detalle: 'Descripción del servicio', precio: 0, activo: true },
+        {
+          id,
+          nombre: 'Nuevo servicio',
+          detalle: 'Descripción del servicio',
+          foto: '',
+          precio: 0,
+          activo: true,
+        },
       ],
     }));
+  }
+
+  async function subirFoto(id, file) {
+    if (!file) return;
+    try {
+      const foto = await imagenADataUrl(file);
+      actualizarServicio(id, { foto });
+    } catch {
+      window.alert('No pudimos cargar esa imagen. Probá con un JPG, PNG o WebP.');
+    }
   }
 
   function crearPaquete() {
@@ -259,8 +307,9 @@ export default function Presupuestador() {
         <div className="mb-6 rounded-2xl border-[3px] border-[#1E2433] bg-[#FFF9EC] p-4 shadow-[4px_4px_0_0_#1E2433]">
           <p className="font-display text-lg font-bold">Modo edición</p>
           <p className="mt-1 text-sm font-semibold text-[#5A6275]">
-            Podés cambiar nombres, precios y beneficios, activar o desactivar ítems, y crear
-            servicios o paquetes nuevos. Los cambios se guardan en este navegador.
+            Podés cambiar nombres, precios y beneficios, sumar una foto de ejemplo a cada
+            servicio, activar o desactivar ítems, y crear servicios o paquetes nuevos. Los cambios
+            se guardan en este navegador.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -287,6 +336,13 @@ export default function Presupuestador() {
               ↺ Restaurar valores originales
             </button>
           </div>
+
+          {avisoGuardado && (
+            <p className="mt-3 rounded-lg border-2 border-[#E31E24] bg-[#FFF1F1] px-3 py-2 text-xs font-bold text-[#E31E24]">
+              No pudimos guardar los cambios en este navegador (se quedó sin espacio). Probá con
+              fotos más livianas o cargá menos imágenes.
+            </p>
+          )}
 
           {nuevoPaquete && (
             <div className="mt-4 rounded-xl border-2 border-dashed border-[#1E2433] bg-white p-4">
@@ -511,76 +567,113 @@ export default function Presupuestador() {
                     }`}
                   >
                     {edicion ? (
-                      <div className="grid gap-2 sm:grid-cols-[1.1fr_1.5fr_auto_auto] sm:items-center">
-                        <input
-                          className={inputEdit}
-                          value={s.nombre}
-                          onChange={(e) => actualizarServicio(s.id, { nombre: e.target.value })}
-                        />
-                        <input
-                          className={inputEdit}
-                          value={s.detalle}
-                          onChange={(e) => actualizarServicio(s.id, { detalle: e.target.value })}
-                        />
-                        <input
-                          type="number"
-                          className={`${inputEdit} sm:w-28`}
-                          value={s.precio}
-                          onChange={(e) =>
-                            actualizarServicio(s.id, { precio: Number(e.target.value) || 0 })
-                          }
-                        />
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            activo={s.activo}
-                            onChange={(v) => actualizarServicio(s.id, { activo: v })}
+                      <div className="space-y-2">
+                        <div className="grid gap-2 sm:grid-cols-[1.1fr_1.5fr_auto_auto] sm:items-center">
+                          <input
+                            className={inputEdit}
+                            value={s.nombre}
+                            onChange={(e) => actualizarServicio(s.id, { nombre: e.target.value })}
                           />
-                          <button
-                            type="button"
-                            onClick={() => eliminarServicio(s.id)}
-                            className="rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
-                            title="Eliminar servicio"
-                          >
-                            ✕
-                          </button>
+                          <input
+                            className={inputEdit}
+                            value={s.detalle}
+                            onChange={(e) => actualizarServicio(s.id, { detalle: e.target.value })}
+                          />
+                          <input
+                            type="number"
+                            className={`${inputEdit} sm:w-28`}
+                            value={s.precio}
+                            onChange={(e) =>
+                              actualizarServicio(s.id, { precio: Number(e.target.value) || 0 })
+                            }
+                          />
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              activo={s.activo}
+                              onChange={(v) => actualizarServicio(s.id, { activo: v })}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => eliminarServicio(s.id)}
+                              className="rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
+                              title="Eliminar servicio"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 rounded-lg border-2 border-dashed border-[#CBD5E1] bg-[#FFF9EC] p-2">
+                          <FotoServicio foto={s.foto} nombre={s.nombre} className="h-12 w-16" />
+                          <label className="cursor-pointer rounded-full border-2 border-[#1E2433] bg-white px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433]">
+                            📷 Subir foto
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={(e) => {
+                                subirFoto(s.id, e.target.files?.[0]);
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          <input
+                            className={`${inputEdit} min-w-[180px] flex-1`}
+                            placeholder="o pegá una URL de imagen (https://...)"
+                            value={s.foto.startsWith('data:') ? '' : s.foto}
+                            onChange={(e) => actualizarServicio(s.id, { foto: e.target.value })}
+                          />
+                          {s.foto && (
+                            <button
+                              type="button"
+                              onClick={() => actualizarServicio(s.id, { foto: '' })}
+                              className="rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
+                              title="Quitar foto"
+                            >
+                              ✕
+                            </button>
+                          )}
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="min-w-[180px] flex-1">
-                          <p className="font-extrabold leading-tight">{s.nombre}</p>
-                          <p className="text-xs font-semibold text-[#5A6275]">{s.detalle}</p>
-                        </div>
-                        <p className="font-display text-lg font-bold">{precioARS(s.precio)}</p>
-                        {cant === 0 ? (
-                          <button
-                            type="button"
-                            onClick={() => sumarServicio(s.id, 1)}
-                            className="rounded-full border-2 border-[#1E2433] bg-white px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433]"
-                          >
-                            + Sumar
-                          </button>
-                        ) : (
-                          <div className="flex items-center gap-1 rounded-full border-2 border-[#1E2433] bg-[#F8C630] px-1">
-                            <button
-                              type="button"
-                              onClick={() => sumarServicio(s.id, -1)}
-                              className="h-6 w-6 rounded-full font-extrabold"
-                              aria-label={`Quitar un ${s.nombre}`}
-                            >
-                              −
-                            </button>
-                            <span className="w-4 text-center text-sm font-extrabold">{cant}</span>
+                      <div className="flex items-start gap-3">
+                        <FotoServicio foto={s.foto} nombre={s.nombre} />
+                        <div className="flex flex-1 flex-wrap items-center gap-3">
+                          <div className="min-w-[160px] flex-1">
+                            <p className="font-extrabold leading-tight">{s.nombre}</p>
+                            <p className="text-xs font-semibold text-[#5A6275]">{s.detalle}</p>
+                          </div>
+                          <p className="font-display text-lg font-bold">{precioARS(s.precio)}</p>
+                          {cant === 0 ? (
                             <button
                               type="button"
                               onClick={() => sumarServicio(s.id, 1)}
-                              className="h-6 w-6 rounded-full font-extrabold"
-                              aria-label={`Agregar un ${s.nombre}`}
+                              className="rounded-full border-2 border-[#1E2433] bg-white px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433]"
                             >
-                              +
+                              + Sumar
                             </button>
-                          </div>
-                        )}
+                          ) : (
+                            <div className="flex items-center gap-1 rounded-full border-2 border-[#1E2433] bg-[#F8C630] px-1">
+                              <button
+                                type="button"
+                                onClick={() => sumarServicio(s.id, -1)}
+                                className="h-6 w-6 rounded-full font-extrabold"
+                                aria-label={`Quitar un ${s.nombre}`}
+                              >
+                                −
+                              </button>
+                              <span className="w-4 text-center text-sm font-extrabold">{cant}</span>
+                              <button
+                                type="button"
+                                onClick={() => sumarServicio(s.id, 1)}
+                                className="h-6 w-6 rounded-full font-extrabold"
+                                aria-label={`Agregar un ${s.nombre}`}
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
