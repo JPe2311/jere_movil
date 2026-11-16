@@ -1,6 +1,7 @@
 import Presupuestador from '@/components/publicidad/Presupuestador';
 import FormatosYoutube from '@/components/publicidad/FormatosYoutube';
-import headerImg from '../../../header.png';
+
+const headerImg = '/header.png';
 
 export const metadata = {
   title: 'Publicidad · Jere Móvil',
