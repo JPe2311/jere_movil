@@ -11,7 +11,7 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-export const RUTA_TARIFARIO = 'config/tarifario';
+export const RUTA_TARIFARIO = 'configuracion/tarifario';
 
 export const PAQUETES_BASE = [
   {
