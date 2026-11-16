@@ -72,6 +72,7 @@ export default function Presupuestador() {
   const [tarifario, setTarifario] = useState(null);
   const [edicion, setEdicion] = useState(false);
   const [paqueteId, setPaqueteId] = useState(null);
+  const [carrito, setCarrito] = useState({});
   const [descuento, setDescuento] = useState(0);
   const [avisoGuardado, setAvisoGuardado] = useState(false);
   const [cliente, setCliente] = useState({
@@ -109,8 +110,23 @@ export default function Presupuestador() {
       subtotal: paqueteSel.precio,
     });
   }
+  for (const s of tarifario?.servicios || []) {
+    const cant = carrito[s.id] || 0;
+    if (cant > 0) {
+      items.push({
+        key: `srv-${s.id}`,
+        nombre: s.nombre,
+        detalle: s.detalle,
+        foto: s.foto,
+        cantidad: cant,
+        unitario: s.precio,
+        subtotal: s.precio * cant,
+      });
+    }
+  }
 
   const subtotal = items.reduce((acc, i) => acc + i.subtotal, 0);
+  const unidades = items.reduce((acc, i) => acc + i.cantidad, 0);
   const descuentoNum = Math.min(Math.max(Number(descuento) || 0, 0), 100);
   const descuentoMonto = Math.round((subtotal * descuentoNum) / 100);
   const total = subtotal - descuentoMonto;
@@ -140,7 +156,7 @@ export default function Presupuestador() {
 
   function descargarPdf() {
     if (items.length === 0) {
-      window.alert('Elegí un paquete para armar la propuesta.');
+      window.alert('Elegí un paquete o sumá algún servicio para armar la propuesta.');
       return;
     }
     generarPresupuestoPDF(datosPresupuesto());
@@ -198,6 +214,11 @@ export default function Presupuestador() {
   function eliminarServicio(id) {
     if (!window.confirm('¿Eliminar este servicio del tarifario?')) return;
     setTarifario((t) => ({ ...t, servicios: t.servicios.filter((s) => s.id !== id) }));
+    setCarrito((c) => {
+      const next = { ...c };
+      delete next[id];
+      return next;
+    });
   }
 
   function agregarServicio() {
@@ -250,7 +271,18 @@ export default function Presupuestador() {
     borrarTarifario();
     setTarifario(cargarTarifario());
     setPaqueteId(null);
+    setCarrito({});
     setDescuento(0);
+  }
+
+  function sumarServicio(id, delta) {
+    setCarrito((c) => {
+      const n = (c[id] || 0) + delta;
+      const next = { ...c };
+      if (n <= 0) delete next[id];
+      else next[id] = n;
+      return next;
+    });
   }
 
   const paquetesVisibles = tarifario.paquetes.filter((p) => edicion || p.activo);
@@ -262,7 +294,7 @@ export default function Presupuestador() {
       {isAdmin && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-bold text-[#5A6275]">
-            Elegí un paquete, mirá los servicios y armá tu propuesta.
+            Modo admin: elegí un paquete y sumá servicios para armar la propuesta.
           </p>
           <button
             type="button"
@@ -399,7 +431,7 @@ export default function Presupuestador() {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className={`grid gap-6 ${isAdmin ? 'lg:grid-cols-[1fr_360px]' : ''}`}>
         {/* Catálogo */}
         <div className="space-y-8">
           <div>
@@ -510,16 +542,18 @@ export default function Presupuestador() {
                         ))}
                       </ul>
                       <p className="mt-3 font-display text-2xl font-bold">{precioARS(p.precio)}</p>
-                      <button
-                        type="button"
-                        onClick={() => setPaqueteId(paqueteId === p.id ? null : p.id)}
-                        aria-pressed={paqueteId === p.id}
-                        className={`mt-2 rounded-full border-2 border-[#1E2433] px-3 py-1.5 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
-                          paqueteId === p.id ? 'bg-[#2B9E63] text-white' : 'bg-[#F8C630]'
-                        }`}
-                      >
-                        {paqueteId === p.id ? '✓ Elegido' : 'Elegir este paquete'}
-                      </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => setPaqueteId(paqueteId === p.id ? null : p.id)}
+                          aria-pressed={paqueteId === p.id}
+                          className={`mt-2 rounded-full border-2 border-[#1E2433] px-3 py-1.5 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
+                            paqueteId === p.id ? 'bg-[#2B9E63] text-white' : 'bg-[#F8C630]'
+                          }`}
+                        >
+                          {paqueteId === p.id ? '✓ Elegido' : 'Elegir este paquete'}
+                        </button>
+                      )}
                     </>
                   )}
                 </article>
@@ -530,7 +564,9 @@ export default function Presupuestador() {
           <div>
             <h3 className="mb-1 font-display text-xl font-bold">Servicios individuales</h3>
             <p className="mb-3 text-sm font-semibold text-[#5A6275]">
-              Precios por video vlog. Si te interesa alguno, contanos cuál en el presupuesto.
+              {isAdmin
+                ? 'Sumá los que quieras a la propuesta y ajustá la cantidad.'
+                : 'Precios por pieza. Si te interesa alguno, contanos cuál y lo armamos.'}
             </p>
             {edicion ? (
               <div className="space-y-2">
@@ -614,11 +650,15 @@ export default function Presupuestador() {
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {serviciosVisibles.map((s) => (
-                  <article
-                    key={s.id}
-                    className="flex flex-col overflow-hidden rounded-2xl border-[3px] border-[#1E2433] bg-white shadow-[4px_4px_0_0_#1E2433]"
-                  >
+                {serviciosVisibles.map((s) => {
+                  const cant = carrito[s.id] || 0;
+                  return (
+                    <article
+                      key={s.id}
+                      className={`flex flex-col overflow-hidden rounded-2xl border-[3px] border-[#1E2433] shadow-[4px_4px_0_0_#1E2433] ${
+                        cant > 0 ? 'bg-[#FFF9EC]' : 'bg-white'
+                      }`}
+                    >
                     {s.foto ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -640,35 +680,73 @@ export default function Presupuestador() {
                         {s.detalle}
                       </p>
                       <p className="mt-3 font-display text-xl font-bold">{precioARS(s.precio)}</p>
+
+                      {isAdmin &&
+                        (cant > 0 ? (
+                          <div className="mt-3 flex items-center justify-between gap-2">
+                            <span className="rounded-full border-2 border-[#1E2433] bg-[#2B9E63] px-2 py-0.5 text-[10px] font-extrabold text-white">
+                              ✓ En el presupuesto
+                            </span>
+                            <div className="flex items-center gap-1 rounded-full border-2 border-[#1E2433] bg-[#F8C630] px-1">
+                              <button
+                                type="button"
+                                onClick={() => sumarServicio(s.id, -1)}
+                                className="h-6 w-6 rounded-full font-extrabold"
+                                aria-label={`Quitar un ${s.nombre}`}
+                              >
+                                −
+                              </button>
+                              <span className="w-4 text-center text-sm font-extrabold">{cant}</span>
+                              <button
+                                type="button"
+                                onClick={() => sumarServicio(s.id, 1)}
+                                className="h-6 w-6 rounded-full font-extrabold"
+                                aria-label={`Agregar un ${s.nombre}`}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => sumarServicio(s.id, 1)}
+                            className="mt-3 self-start rounded-full border-2 border-[#1E2433] bg-white px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433]"
+                          >
+                            + Sumar al presupuesto
+                          </button>
+                        ))}
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             )}
             {serviciosVisibles.length === 0 && (
               <p className="rounded-xl border-2 border-dashed border-[#1E2433] p-4 text-center text-sm font-bold text-[#5A6275]">
-                No hay servicios activos. Activá alguno en el modo edición.
+                No hay servicios disponibles por ahora.
               </p>
             )}
           </div>
 
         </div>
 
-        {/* Resumen */}
-        <aside className="lg:sticky lg:top-20 lg:self-start">
-          <div className="rounded-2xl border-[3px] border-[#1E2433] bg-white p-4 shadow-[6px_6px_0_0_#1E2433]">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-xl font-bold">Tu presupuesto</h3>
-              <span className="rounded-full border-2 border-[#1E2433] bg-[#2997D8] px-2 py-0.5 text-[10px] font-extrabold text-white">
-                {paqueteSel ? '1 paquete' : 'sin paquete'}
-              </span>
-            </div>
+        {/* Resumen: herramienta interna, solo para el administrador */}
+        {isAdmin && (
+          <aside className="lg:sticky lg:top-20 lg:self-start">
+            <div className="rounded-2xl border-[3px] border-[#1E2433] bg-white p-4 shadow-[6px_6px_0_0_#1E2433]">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-xl font-bold">Tu presupuesto</h3>
+                <span className="rounded-full border-2 border-[#1E2433] bg-[#2997D8] px-2 py-0.5 text-[10px] font-extrabold text-white">
+                  {unidades} {unidades === 1 ? 'ítem' : 'ítems'}
+                </span>
+              </div>
 
             <div className="my-3 border-t-2 border-dashed border-[#CBD5E1]" />
 
             {items.length === 0 ? (
               <p className="py-4 text-center text-sm font-semibold text-[#5A6275]">
-                Elegí un paquete de la lista para armar la propuesta.
+                Elegí un paquete, sumá servicios o combiná los dos.
               </p>
             ) : (
               <ul className="space-y-2">
@@ -789,7 +867,7 @@ export default function Presupuestador() {
               onClick={(e) => {
                 if (items.length === 0) {
                   e.preventDefault();
-                  window.alert('Elegí un paquete para enviar la propuesta.');
+                  window.alert('Elegí un paquete o sumá algún servicio para enviarlo.');
                 }
               }}
               className="mt-2 block w-full rounded-full border-[3px] border-[#1E2433] bg-[#2B9E63] px-4 py-2 text-center font-display text-sm font-bold text-white shadow-[4px_4px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
@@ -801,15 +879,17 @@ export default function Presupuestador() {
                 type="button"
                 onClick={() => {
                   setPaqueteId(null);
+                  setCarrito({});
                   setDescuento(0);
                 }}
                 className="mt-2 w-full text-center text-xs font-extrabold text-[#5A6275] underline"
               >
-                Quitar paquete
+                Vaciar presupuesto
               </button>
             )}
-          </div>
-        </aside>
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );
