@@ -3,11 +3,15 @@
 /**
  * Catálogo del tarifario de publicidad (Media Kit Jere Móvil).
  * Se puede editar desde el "Modo edición" de /publicidad y queda guardado
- * en localStorage con una clave versionada. Los valores base son los del
+ * en Firestore (documento config/tarifario) para que todos los visitantes
+ * vean la información actualizada. Los valores base son los del
  * documento original.
  */
 
-export const CLAVE_TARIFARIO = 'jeremovil_tarifario_v1';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+export const RUTA_TARIFARIO = 'config/tarifario';
 
 export const PAQUETES_BASE = [
   {
@@ -181,35 +185,42 @@ function normalizar(guardado) {
   return { paquetes, servicios };
 }
 
-export function cargarTarifario() {
+/**
+ * Lee el tarifario desde Firestore. Cualquier visitante puede leerlo.
+ * Si no hay documento ni Firebase configurado, devuelve el catálogo base.
+ */
+export async function cargarTarifario() {
   if (typeof window === 'undefined') return catalogoOriginal();
+  if (!db) return catalogoOriginal();
   try {
-    const raw = window.localStorage.getItem(CLAVE_TARIFARIO);
-    if (!raw) return catalogoOriginal();
-    return normalizar(JSON.parse(raw));
+    const snap = await getDoc(doc(db, RUTA_TARIFARIO));
+    if (!snap.exists()) return catalogoOriginal();
+    return normalizar(snap.data());
   } catch {
     return catalogoOriginal();
   }
 }
 
-export function guardarTarifario(tarifario) {
+/**
+ * Guarda el tarifario en Firestore. Solo debería llamarlo un administrador.
+ * Los visitantes podrán ver los cambios en cuanto se publique.
+ */
+export async function guardarTarifario(tarifario) {
   if (typeof window === 'undefined') return false;
+  if (!db) return false;
   try {
-    window.localStorage.setItem(CLAVE_TARIFARIO, JSON.stringify(tarifario));
+    await setDoc(doc(db, RUTA_TARIFARIO), tarifario);
     return true;
   } catch {
-    /* sin espacio o sin localStorage: los cambios valen solo para esta sesión */
+    /* sin permisos o sin conexión: los cambios valen solo para esta sesión */
     return false;
   }
 }
 
 export function borrarTarifario() {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.removeItem(CLAVE_TARIFARIO);
-  } catch {
-    /* nada */
-  }
+  /* Se deja por compatibilidad, pero ya no borra localStorage.
+     El tarifario vive en Firestore y se restaura con los valores base
+     desde el modo edición si es necesario. */
 }
 
 const formatoARS = new Intl.NumberFormat('es-AR', {
@@ -228,7 +239,7 @@ export function nuevoId(prefijo) {
 
 /**
  * Convierte una foto elegida por el usuario en un data URL liviano
- * (máximo 720 px de lado, JPEG 75%) para poder guardarla en localStorage
+ * (máximo 720 px de lado, JPEG 75%) para poder guardarla en Firestore
  * junto con el resto del tarifario.
  */
 export function imagenADataUrl(file, maxLado = 720, calidad = 0.75) {

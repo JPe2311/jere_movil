@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import {
-  borrarTarifario,
   cargarTarifario,
+  catalogoOriginal,
   guardarTarifario,
   imagenADataUrl,
   nuevoId,
@@ -70,11 +70,14 @@ function FotoServicio({ foto, nombre, className = 'h-16 w-24' }) {
 export default function Presupuestador() {
   const { isAdmin } = useAuth();
   const [tarifario, setTarifario] = useState(null);
+  const [cargandoTarifario, setCargandoTarifario] = useState(true);
   const [edicion, setEdicion] = useState(false);
   const [paqueteId, setPaqueteId] = useState(null);
   const [carrito, setCarrito] = useState({});
   const [descuento, setDescuento] = useState(0);
   const [avisoGuardado, setAvisoGuardado] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [exitoGuardado, setExitoGuardado] = useState(false);
   const [cliente, setCliente] = useState({
     marca: '',
     campania: '',
@@ -85,17 +88,22 @@ export default function Presupuestador() {
   const [nuevoPaquete, setNuevoPaquete] = useState(null);
 
   useEffect(() => {
-    setTarifario(cargarTarifario());
+    let montado = true;
+    cargarTarifario().then((t) => {
+      if (montado) {
+        setTarifario(t);
+        setCargandoTarifario(false);
+      }
+    });
+    return () => {
+      montado = false;
+    };
   }, []);
 
   // El modo edición es solo para administradores.
   useEffect(() => {
     if (!isAdmin) setEdicion(false);
   }, [isAdmin]);
-
-  useEffect(() => {
-    if (tarifario) setAvisoGuardado(!guardarTarifario(tarifario));
-  }, [tarifario]);
 
   const paqueteSel = tarifario?.paquetes.find((p) => p.id === paqueteId && p.activo) || null;
 
@@ -266,13 +274,35 @@ export default function Presupuestador() {
     setNuevoPaquete(null);
   }
 
-  function restaurar() {
+  async function guardarCambios() {
+    if (!tarifario) return;
+    setGuardando(true);
+    try {
+      const ok = await guardarTarifario(tarifario);
+      if (ok) {
+        setAvisoGuardado(false);
+        setExitoGuardado(true);
+        setTimeout(() => setExitoGuardado(false), 3000);
+        setEdicion(false);
+      } else {
+        setAvisoGuardado(true);
+      }
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  async function restaurar() {
     if (!window.confirm('¿Volver a los precios y textos originales del media kit?')) return;
-    borrarTarifario();
-    setTarifario(cargarTarifario());
+    const base = catalogoOriginal();
+    setTarifario(base);
+    await guardarTarifario(base);
     setPaqueteId(null);
     setCarrito({});
     setDescuento(0);
+    setEdicion(false);
+    setExitoGuardado(false);
+    setAvisoGuardado(false);
   }
 
   function sumarServicio(id, delta) {
@@ -313,7 +343,7 @@ export default function Presupuestador() {
           <p className="mt-1 text-sm font-semibold text-[#5A6275]">
             Podés cambiar nombres, precios y beneficios, sumar una foto de ejemplo a cada
             servicio, activar o desactivar ítems, y crear servicios o paquetes nuevos. Los cambios
-            se guardan en este navegador.
+            se guardan en Firestore y se ven para todos los visitantes.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
@@ -339,12 +369,24 @@ export default function Presupuestador() {
             >
               ↺ Restaurar valores originales
             </button>
+            <button
+              type="button"
+              onClick={guardarCambios}
+              disabled={guardando}
+              className="rounded-full border-2 border-[#1E2433] bg-[#1E2433] px-3 py-1 text-xs font-extrabold text-white shadow-[2px_2px_0_0_#1E2433]"
+            >
+              {guardando ? 'Guardando...' : '💾 Guardar cambios'}
+            </button>
           </div>
 
           {avisoGuardado && (
             <p className="mt-3 rounded-lg border-2 border-[#E31E24] bg-[#FFF1F1] px-3 py-2 text-xs font-bold text-[#E31E24]">
-              No pudimos guardar los cambios en este navegador (se quedó sin espacio). Probá con
-              fotos más livianas o cargá menos imágenes.
+              No pudimos guardar los cambios en Firestore. Probá de nuevo.
+            </p>
+          )}
+          {exitoGuardado && (
+            <p className="mt-3 rounded-lg border-2 border-[#2B9E63] bg-[#EFF6F1] px-3 py-2 text-xs font-bold text-[#2B9E63]">
+              Cambios guardados en Firestore. Ya se ven para todos los visitantes.
             </p>
           )}
 
