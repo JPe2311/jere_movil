@@ -262,7 +262,7 @@ export default function Presupuestador() {
       {isAdmin && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-bold text-[#5A6275]">
-            Mirá los servicios, elegí un paquete y armá tu propuesta.
+            Elegí un paquete, mirá los servicios y armá tu propuesta.
           </p>
           <button
             type="button"
@@ -403,6 +403,131 @@ export default function Presupuestador() {
         {/* Catálogo */}
         <div className="space-y-8">
           <div>
+            <h3 className="mb-1 font-display text-xl font-bold">Paquetes</h3>
+            <p className="mb-3 text-sm font-semibold text-[#5A6275]">
+              Tres formas de sumarte. Elegí la que mejor va con tu marca.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {paquetesVisibles.map((p) => (
+                <article
+                  key={p.id}
+                  className={`relative flex flex-col rounded-2xl border-[3px] border-[#1E2433] p-4 shadow-[4px_4px_0_0_#1E2433] transition ${
+                    paqueteId === p.id ? 'bg-[#FFF9EC]' : 'bg-white'
+                  } ${p.activo ? '' : 'opacity-50'}`}
+                >
+                  {edicion ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-extrabold">Activo</span>
+                        <Switch
+                          activo={p.activo}
+                          onChange={(v) => actualizarPaquete(p.id, { activo: v })}
+                        />
+                      </div>
+                      <input
+                        className={inputEdit}
+                        value={p.nombre}
+                        onChange={(e) => actualizarPaquete(p.id, { nombre: e.target.value })}
+                      />
+                      <input
+                        className={inputEdit}
+                        value={p.subtitulo}
+                        onChange={(e) => actualizarPaquete(p.id, { subtitulo: e.target.value })}
+                      />
+                      <label className="block text-xs font-bold">
+                        Precio (ARS)
+                        <input
+                          type="number"
+                          className={inputEdit}
+                          value={p.precio}
+                          onChange={(e) =>
+                            actualizarPaquete(p.id, { precio: Number(e.target.value) || 0 })
+                          }
+                        />
+                      </label>
+                      <label className="flex items-center gap-2 text-xs font-bold">
+                        <input
+                          type="checkbox"
+                          checked={p.destacado}
+                          onChange={(e) =>
+                            actualizarPaquete(p.id, { destacado: e.target.checked })
+                          }
+                        />
+                        “Más elegido”
+                      </label>
+
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold">Incluye</p>
+                        {p.incluye.map((it, i) => (
+                          <div key={i} className="flex items-center gap-1">
+                            <input
+                              className={inputEdit}
+                              value={it}
+                              onChange={(e) => setItemIncluye(p.id, i, e.target.value)}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => quitarItemIncluye(p.id, i)}
+                              className="shrink-0 rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
+                              title="Quitar beneficio"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => agregarItemIncluye(p.id)}
+                          className="text-xs font-extrabold underline"
+                        >
+                          + Agregar beneficio
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => eliminarPaquete(p.id)}
+                        className="mt-1 text-xs font-extrabold text-[#E31E24] underline"
+                      >
+                        Eliminar paquete
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {p.destacado && (
+                        <span className="absolute -top-3 left-4 rounded-full border-2 border-[#1E2433] bg-[#F25287] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-[2px_2px_0_0_#1E2433]">
+                          EL MÁS ELEGIDO
+                        </span>
+                      )}
+                      <h4 className="mt-1 font-display text-xl font-bold leading-none">{p.nombre}</h4>
+                      <p className="mt-1 text-xs font-bold text-[#5A6275]">{p.subtitulo}</p>
+                      <ul className="mt-3 flex-1 space-y-1 text-sm font-semibold">
+                        {p.incluye.map((it, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="text-[#2B9E63]">✔</span>
+                            <span>{it}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-3 font-display text-2xl font-bold">{precioARS(p.precio)}</p>
+                      <button
+                        type="button"
+                        onClick={() => setPaqueteId(paqueteId === p.id ? null : p.id)}
+                        aria-pressed={paqueteId === p.id}
+                        className={`mt-2 rounded-full border-2 border-[#1E2433] px-3 py-1.5 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
+                          paqueteId === p.id ? 'bg-[#2B9E63] text-white' : 'bg-[#F8C630]'
+                        }`}
+                      >
+                        {paqueteId === p.id ? '✓ Elegido' : 'Elegir este paquete'}
+                      </button>
+                    </>
+                  )}
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <h3 className="mb-1 font-display text-xl font-bold">Servicios individuales</h3>
             <p className="mb-3 text-sm font-semibold text-[#5A6275]">
               Precios por video vlog. Si te interesa alguno, contanos cuál en el presupuesto.
@@ -527,130 +652,6 @@ export default function Presupuestador() {
             )}
           </div>
 
-          <div>
-            <h3 className="mb-1 font-display text-xl font-bold">Paquetes</h3>
-            <p className="mb-3 text-sm font-semibold text-[#5A6275]">
-              Tres formas de sumarte. Elegí la que mejor va con tu marca.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {paquetesVisibles.map((p) => (
-                <article
-                  key={p.id}
-                  className={`relative flex flex-col rounded-2xl border-[3px] border-[#1E2433] p-4 shadow-[4px_4px_0_0_#1E2433] transition ${
-                    paqueteId === p.id ? 'bg-[#FFF9EC]' : 'bg-white'
-                  } ${p.activo ? '' : 'opacity-50'}`}
-                >
-                  {edicion ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-extrabold">Activo</span>
-                        <Switch
-                          activo={p.activo}
-                          onChange={(v) => actualizarPaquete(p.id, { activo: v })}
-                        />
-                      </div>
-                      <input
-                        className={inputEdit}
-                        value={p.nombre}
-                        onChange={(e) => actualizarPaquete(p.id, { nombre: e.target.value })}
-                      />
-                      <input
-                        className={inputEdit}
-                        value={p.subtitulo}
-                        onChange={(e) => actualizarPaquete(p.id, { subtitulo: e.target.value })}
-                      />
-                      <label className="block text-xs font-bold">
-                        Precio (ARS)
-                        <input
-                          type="number"
-                          className={inputEdit}
-                          value={p.precio}
-                          onChange={(e) =>
-                            actualizarPaquete(p.id, { precio: Number(e.target.value) || 0 })
-                          }
-                        />
-                      </label>
-                      <label className="flex items-center gap-2 text-xs font-bold">
-                        <input
-                          type="checkbox"
-                          checked={p.destacado}
-                          onChange={(e) =>
-                            actualizarPaquete(p.id, { destacado: e.target.checked })
-                          }
-                        />
-                        “Más elegido”
-                      </label>
-
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold">Incluye</p>
-                        {p.incluye.map((it, i) => (
-                          <div key={i} className="flex items-center gap-1">
-                            <input
-                              className={inputEdit}
-                              value={it}
-                              onChange={(e) => setItemIncluye(p.id, i, e.target.value)}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => quitarItemIncluye(p.id, i)}
-                              className="shrink-0 rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
-                              title="Quitar beneficio"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => agregarItemIncluye(p.id)}
-                          className="text-xs font-extrabold underline"
-                        >
-                          + Agregar beneficio
-                        </button>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => eliminarPaquete(p.id)}
-                        className="mt-1 text-xs font-extrabold text-[#E31E24] underline"
-                      >
-                        Eliminar paquete
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {p.destacado && (
-                        <span className="absolute -top-3 left-4 rounded-full border-2 border-[#1E2433] bg-[#F25287] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-[2px_2px_0_0_#1E2433]">
-                          EL MÁS ELEGIDO
-                        </span>
-                      )}
-                      <h4 className="mt-1 font-display text-xl font-bold leading-none">{p.nombre}</h4>
-                      <p className="mt-1 text-xs font-bold text-[#5A6275]">{p.subtitulo}</p>
-                      <ul className="mt-3 flex-1 space-y-1 text-sm font-semibold">
-                        {p.incluye.map((it, i) => (
-                          <li key={i} className="flex gap-2">
-                            <span className="text-[#2B9E63]">✔</span>
-                            <span>{it}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="mt-3 font-display text-2xl font-bold">{precioARS(p.precio)}</p>
-                      <button
-                        type="button"
-                        onClick={() => setPaqueteId(paqueteId === p.id ? null : p.id)}
-                        aria-pressed={paqueteId === p.id}
-                        className={`mt-2 rounded-full border-2 border-[#1E2433] px-3 py-1.5 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
-                          paqueteId === p.id ? 'bg-[#2B9E63] text-white' : 'bg-[#F8C630]'
-                        }`}
-                      >
-                        {paqueteId === p.id ? '✓ Elegido' : 'Elegir este paquete'}
-                      </button>
-                    </>
-                  )}
-                </article>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Resumen */}

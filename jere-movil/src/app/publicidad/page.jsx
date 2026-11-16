@@ -1,4 +1,5 @@
 import Presupuestador from '@/components/publicidad/Presupuestador';
+import FormatosYoutube from '@/components/publicidad/FormatosYoutube';
 
 export const metadata = {
   title: 'Publicidad · Jere Móvil',
@@ -35,28 +36,33 @@ const PILARES = [
 
 const FORMATOS = [
   {
+    id: 'apertura',
     tiempo: '10-15 seg',
     nombre: 'Mención de apertura',
     texto: 'La marca se nombra en la introducción del capítulo.',
   },
   {
+    id: 'integracion',
     tiempo: '~1 min',
     nombre: 'Integración orgánica',
     texto: 'El producto se usa en una escena real del viaje. Es el formato de mayor impacto.',
     destacado: 'MAYOR IMPACTO',
   },
   {
+    id: 'banner',
     tiempo: '10-15 seg',
     nombre: 'Banner en pantalla',
     texto:
       'Logo o gráfico discreto. Cuatro opciones: banner de apertura (10 seg en la introducción), de integración (todo el minuto de la integración), central (15 seg a mitad del capítulo) y de cierre (10 seg junto al “Agradecemos a…”).',
   },
   {
+    id: 'creditos',
     tiempo: '10 seg',
     nombre: 'Agradecimiento en créditos',
     texto: '“Agradecemos a…” con logo, nombre y link de la marca.',
   },
   {
+    id: 'link',
     tiempo: 'Permanente',
     nombre: 'Link en descripción y comentario fijado',
     texto:
@@ -248,41 +254,7 @@ export default function PublicidadPage() {
             titulo="Integraciones dentro del video"
           />
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {FORMATOS.map((f, i) => (
-              <div
-                key={f.nombre}
-                className={`relative rounded-2xl border-[3px] border-[#1E2433] bg-white p-5 shadow-[4px_4px_0_0_#1E2433] ${
-                  f.destacado ? 'md:col-span-2' : ''
-                }`}
-              >
-                {f.destacado && (
-                  <span className="absolute -top-3 right-4 rounded-full border-2 border-[#1E2433] bg-[#E31E24] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-[2px_2px_0_0_#1E2433]">
-                    {f.destacado}
-                  </span>
-                )}
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className="grid h-7 w-7 place-items-center rounded-full border-2 border-[#1E2433] font-kit text-xs font-bold text-white"
-                    style={{ backgroundColor: ['#F37021', '#E31E24', '#2997D8', '#2B9E63', '#F25287'][i] }}
-                  >
-                    {i + 1}
-                  </span>
-                  <h3 className="font-kit text-lg font-bold">{f.nombre}</h3>
-                  <span className="rounded-full border-2 border-[#1E2433] bg-[#F8C630] px-2 py-0.5 text-[10px] font-extrabold uppercase">
-                    {f.tiempo}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm font-semibold leading-relaxed" style={{ color: GRIS }}>
-                  {f.texto}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-4 text-xs font-bold italic" style={{ color: GRIS }}>
-            * Los tiempos son aproximados y se confirman en la revisión previa con la marca.
-          </p>
+          <FormatosYoutube formatos={FORMATOS} />
         </section>
 
         {/* ================= 03. MÁS ALLÁ DEL VIDEO ================= */}
@@ -337,9 +309,9 @@ export default function PublicidadPage() {
           <TituloSeccion
             badge="04. Elegí tu ruta"
             color="#F37021"
-            titulo="Servicios, paquetes y presupuesto"
+            titulo="Paquetes, servicios y presupuesto"
           >
-            Mirá los servicios individuales, elegí un paquete y descargá la propuesta en PDF.
+            Elegí un paquete, mirá los servicios individuales y descargá la propuesta en PDF.
           </TituloSeccion>
 
           <Presupuestador />
