@@ -21,7 +21,7 @@ export default function HomePage() {
   const slides = [
     {
       titulo: '¡Bienvenidos a Jere Móvil!',
-      descripcion: 'Recorriendo América en La Bebi, nuestra casa sobre ruedas.',
+      descripcion: 'Recorriendo América en mi casa sobre ruedas.',
       emoji: '🚐',
       etiqueta: 'Inicio',
       degradado: 'from-cielo via-sol to-rosa',
@@ -29,13 +29,13 @@ export default function HomePage() {
       textoBoton: 'Ver el mapa →',
     },
     {
-      titulo: 'La Bebi en la ruta',
+      titulo: 'La ruta en marcha',
       descripcion: 'Noches de acampada y paisajes inolvidables en el camino.',
       emoji: '🏕️',
-      etiqueta: 'La Bebi',
+      etiqueta: 'Furgoneta',
       degradado: 'from-monte via-sol to-crema',
       url: '/quien-soy',
-      textoBoton: 'Conocer La Bebi →',
+      textoBoton: 'Conocer la furgoneta →',
     },
     {
       titulo: 'Montañas del Norte',
@@ -86,7 +86,7 @@ export default function HomePage() {
               <span className="font-display text-lg font-extrabold text-noche">Jere Móvil</span>
             </div>
             <p className="text-sm text-noche/70 text-center md:text-left">
-              Bitácora de viaje interactiva · Viajar con La Bebi por América
+              Bitácora de viaje interactiva · Viajar por América
             </p>
             <div className="flex gap-3">
               <a href="https://www.instagram.com/jerefijo/" target="_blank" rel="noopener noreferrer" className="text-noche/60 hover:text-noche transition">

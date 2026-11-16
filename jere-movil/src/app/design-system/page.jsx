@@ -35,7 +35,7 @@ export default function DesignSystemPage() {
           <div className="relative z-10 space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="chip bg-rosa text-white">✨ v2.4 Comic Edition</span>
-              <span className="chip bg-sol">🚐 La Bebi Camper Kit</span>
+              <span className="chip bg-sol">🚐 Camper Kit</span>
               <span className="chip bg-monte text-white">✓ 100% Neo-Brutalist Ready</span>
             </div>
 
@@ -49,7 +49,7 @@ export default function DesignSystemPage() {
 
             <p className="max-w-2xl text-base font-semibold text-noche/80 sm:text-lg">
               Sistema de diseño y biblioteca de componentes lúdicos para narrar el viaje de Jere y su furgoneta{' '}
-              <strong>"La Bebi"</strong> por Latinoamérica. Tinta gruesa, sombras sólidas, stickers coleccionables y estética de cómic.
+              <strong>Mi furgoneta</strong> por Latinoamérica. Tinta gruesa, sombras sólidas, stickers coleccionables y estética de cómic.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -152,13 +152,13 @@ export default function DesignSystemPage() {
               <div className="border-t border-dashed border-noche/20 pt-4">
                 <span className="text-xs font-bold text-noche/60 uppercase">H2 / Subcapítulo</span>
                 <h2 className="font-display text-xl font-bold text-atardecer">
-                  Puntualidad mecánica: La Bebi a 4.200 msnm
+                  Puntualidad mecánica: la furgoneta a 4.200 msnm
                 </h2>
               </div>
               <div className="border-t border-dashed border-noche/20 pt-4">
                 <span className="text-xs font-bold text-noche/60 uppercase">Cuerpo de Texto / Nunito</span>
                 <p className="text-sm font-semibold leading-relaxed text-noche/85">
-                  Amanecimos con escarcha en el parabrisas de La Bebi. El motor arrancó al segundo intento con ese
+                  Amanecimos con escarcha en el parabrisas de la furgoneta. El motor arrancó al segundo intento con ese
                   ronquido fiel que ya reconocemos de memoria. Próxima parada: cocinar fideos al resguardo del viento.
                 </p>
               </div>
@@ -172,7 +172,7 @@ export default function DesignSystemPage() {
                   <span className="font-display text-xs font-bold">Voz de Jere</span>
                 </div>
                 <p className="font-display text-base font-bold leading-snug">
-                  “¡Che, no se imaginan el cielo estrellado de Atacama! La Bebi se portó como una campeona subiendo la
+                  “¡Che, no se imaginan el cielo estrellado de Atacama! La furgoneta se portó como una campeona subiendo la
                   cuesta y ahora tenemos fogata lista.”
                 </p>
               </div>
@@ -216,7 +216,7 @@ export default function DesignSystemPage() {
                   💖 Apoyar el Viaje
                 </button>
                 <button type="button" className="btn btn-ghost">
-                  🗺️ Centrar en La Bebi
+                  🗺️ Centrar en la furgoneta
                 </button>
               </div>
             </div>
@@ -332,14 +332,14 @@ export default function DesignSystemPage() {
         <section className="space-y-4">
           <div className="border-b-[3px] border-noche pb-2">
             <span className="chip bg-sol">05. Activos del Mapa Cómic</span>
-            <h2 className="font-display text-2xl font-black sm:text-3xl">La Bebi, Pines y Scrubber</h2>
+            <h2 className="font-display text-2xl font-black sm:text-3xl">Furgoneta, Pines y Scrubber</h2>
           </div>
 
           <div className="card-comic space-y-6 p-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Token de La Bebi */}
               <div className="rounded-2xl border-2 border-noche/30 bg-crema p-4 text-center">
-                <span className="text-xs font-bold text-noche/60">Token: Furgoneta "La Bebi"</span>
+                <span className="text-xs font-bold text-noche/60">Token: Furgoneta</span>
                 <div className="my-4 flex items-center justify-center">
                   <motion.div
                     animate={{
@@ -350,7 +350,7 @@ export default function DesignSystemPage() {
                     className="relative cursor-pointer"
                     onClick={() => setVanState(vanState === 'driving' ? 'parked' : 'driving')}
                   >
-                    <img src="/labebi.svg" alt="La Bebi" className="w-24 drop-shadow-md" />
+                    <img src="/labebi.svg" alt="Furgoneta" className="w-24 drop-shadow-md" />
                     <span className="absolute -left-6 bottom-0 rounded-full border-2 border-noche bg-white px-1.5 py-0.5 text-[10px] font-black shadow-comic-sm">
                       ¡Puf! 💨
                     </span>

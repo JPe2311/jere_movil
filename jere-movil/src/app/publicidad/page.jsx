@@ -3,7 +3,7 @@ import Presupuestador from '@/components/publicidad/Presupuestador';
 export const metadata = {
   title: 'Publicidad · Jere Móvil',
   description:
-    'Sumá tu marca a La Bebi: integraciones en YouTube, redes, furgoneta y web. Armá tu presupuesto a medida.',
+    'Sumate a la comunidad viajera: integraciones en YouTube, redes, furgoneta y web. Armá tu presupuesto a medida.',
 };
 
 const TINTA = '#1E2433';
@@ -72,7 +72,7 @@ const ESPACIOS = [
     color: '#F25287',
   },
   {
-    titulo: 'Marca en La Bebi',
+    titulo: 'Marca en la furgoneta',
     texto:
       'Calco o logo de la marca visible en la furgoneta durante la ruta: se ve en cada escena y cada foto.',
     emoji: '🚐',
@@ -150,7 +150,7 @@ export default function PublicidadPage() {
               </span>
             </h1>
             <p className="mt-4 text-lg font-bold sm:text-xl" style={{ color: GRIS }}>
-              Viajá con La Bebi • Sumá tu marca a la ruta
+              Acompañame en este viaje • Sumate a la comunidad
             </p>
             <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
               <a
@@ -179,20 +179,20 @@ export default function PublicidadPage() {
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
             <div className="space-y-4">
               <p className="text-base font-semibold leading-relaxed" style={{ color: GRIS }}>
-                Viajo en mi furgoneta “La Bebi” por Latinoamérica, desde Córdoba (Km 0), y realizo
-                el vlog de todos estos viajes en videos en YouTube, por mis redes sociales para una
-                comunidad hermosa que me sigue capítulo a capítulo.
+                Viajo en mi furgoneta por Latinoamérica, desde Córdoba (Km 0), y realizo el vlog de
+                todos estos viajes en videos en YouTube, por mis redes sociales para una comunidad
+                hermosa que me sigue capítulo a capítulo.
               </p>
               <p className="text-base font-semibold leading-relaxed" style={{ color: GRIS }}>
-                Una marca que viaja con La Bebi no se ve como un aviso: se vuelve parte de la ruta.
-                Tu producto aparece en escenas reales de mi vida diaria, en las redes y en la propia
-                furgoneta.
+                Una marca que se suma a este viaje no se ve como un aviso: se vuelve parte de la
+                ruta. Tu producto aparece en escenas reales de mi vida diaria, en las redes y en la
+                propia furgoneta.
               </p>
 
               <blockquote className="rounded-2xl border-[3px] border-[#1E2433] bg-[#FFF9EC] p-5 shadow-[4px_4px_0_0_#1E2433]">
                 <p className="font-kit text-lg font-bold leading-snug">
-                  “Cada marca que sube a La Bebi se vuelve parte de la aventura: acá se prueba de
-                  verdad, kilómetro a kilómetro.”
+                  “Cada marca que se suma a esta aventura se vuelve parte del viaje: acá se prueba
+                  de verdad, kilómetro a kilómetro.”
                 </p>
                 <footer className="mt-2 text-sm font-extrabold" style={{ color: GRIS }}>
                   — Jere

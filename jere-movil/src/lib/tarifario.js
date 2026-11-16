@@ -47,7 +47,7 @@ export const PAQUETES_BASE = [
     incluye: [
       'Todo lo del Aventurero',
       'Integración orgánica (~1 min) con banner central',
-      'Marca en La Bebi por 60 días',
+      'Marca en la furgoneta por 60 días',
       'Sección de marca en la web (90 días)',
     ],
   },
@@ -126,14 +126,14 @@ export const SERVICIOS_BASE = [
   },
   {
     id: 'marca-exterior',
-    nombre: 'Marca en La Bebi (exterior)',
+    nombre: 'Marca en la furgoneta (exterior)',
     detalle: 'Calco/logo visible en la furgoneta 60 días',
     precio: 300000,
     activo: true,
   },
   {
     id: 'marca-conduccion',
-    nombre: 'Marca en La Bebi (conducción)',
+    nombre: 'Marca en la furgoneta (conducción)',
     detalle: 'Calco/logo visible detrás del conductor 30 días',
     precio: 500000,
     activo: true,
@@ -151,23 +151,27 @@ function normalizar(guardado) {
   const base = catalogoOriginal();
   if (!guardado || typeof guardado !== 'object') return base;
 
+  // Los tarifarios guardados antes del cambio de nombre pueden nombrar a la
+  // furgoneta de una forma que ya no usamos: lo corregimos sin tocar precios.
+  const sinMencion = (texto) => String(texto ?? '').replace(/La Bebi/g, 'la furgoneta');
+
   const paquetes = Array.isArray(guardado.paquetes)
     ? guardado.paquetes.filter((p) => p && p.id).map((p) => ({
         id: String(p.id),
-        nombre: p.nombre ?? '',
-        subtitulo: p.subtitulo ?? '',
+        nombre: sinMencion(p.nombre),
+        subtitulo: sinMencion(p.subtitulo),
         precio: Number(p.precio) || 0,
         destacado: Boolean(p.destacado),
         activo: p.activo !== false,
-        incluye: Array.isArray(p.incluye) ? p.incluye.map(String) : [],
+        incluye: Array.isArray(p.incluye) ? p.incluye.map((it) => sinMencion(it)) : [],
       }))
     : base.paquetes;
 
   const servicios = Array.isArray(guardado.servicios)
     ? guardado.servicios.filter((s) => s && s.id).map((s) => ({
         id: String(s.id),
-        nombre: s.nombre ?? '',
-        detalle: s.detalle ?? '',
+        nombre: sinMencion(s.nombre),
+        detalle: sinMencion(s.detalle),
         foto: typeof s.foto === 'string' ? s.foto : '',
         precio: Number(s.precio) || 0,
         activo: s.activo !== false,

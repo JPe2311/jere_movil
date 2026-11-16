@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 export const metadata = {
   title: 'Jere Móvil — Bitácora de viaje',
   description:
-    'La bitácora interactiva de Jere y La Bebi: seguí la ruta por América, mirá los videos y sumate a la comunidad viajera.',
+    'La bitácora interactiva de Jere: seguí la ruta por América, mirá los videos y sumate a la comunidad viajera.',
 };
 
 export const viewport = {

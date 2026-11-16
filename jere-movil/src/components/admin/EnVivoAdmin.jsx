@@ -29,7 +29,7 @@ export default function EnVivoAdmin() {
   const { items } = useCollection('eventos_en_vivo', 'inicio', 'desc');
   const activo = items.find((e) => e.estado === 'activo') || null;
 
-  const [titulo, setTitulo] = useState('En vivo desde La Bebi');
+  const [titulo, setTitulo] = useState('En vivo desde la ruta');
   const [plataforma, setPlataforma] = useState('youtube');
   const [streamUrl, setStreamUrl] = useState('');
   const [msg, setMsg] = useState({ text: '', tone: 'error' });

@@ -10,6 +10,7 @@ import {
   precioARS,
 } from '@/lib/tarifario';
 import { generarPresupuestoPDF, urlWhatsApp } from '@/lib/presupuestoPdf';
+import { useAuth } from '@/components/AuthProvider';
 
 const TINTA = '#1E2433';
 const GRIS = '#5A6275';
@@ -67,6 +68,7 @@ function FotoServicio({ foto, nombre, className = 'h-16 w-24' }) {
 }
 
 export default function Presupuestador() {
+  const { isAdmin } = useAuth();
   const [tarifario, setTarifario] = useState(null);
   const [edicion, setEdicion] = useState(false);
   const [paqueteId, setPaqueteId] = useState(null);
@@ -85,6 +87,11 @@ export default function Presupuestador() {
   useEffect(() => {
     setTarifario(cargarTarifario());
   }, []);
+
+  // El modo edición es solo para administradores.
+  useEffect(() => {
+    if (!isAdmin) setEdicion(false);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (tarifario) setAvisoGuardado(!guardarTarifario(tarifario));
@@ -293,17 +300,19 @@ export default function Presupuestador() {
         <p className="text-sm font-bold text-[#5A6275]">
           Armá tu combo: elegí un paquete y sumá servicios sueltos.
         </p>
-        <button
-          type="button"
-          onClick={() => setEdicion((e) => !e)}
-          className="inline-flex items-center gap-2 rounded-full border-2 border-[#1E2433] bg-white px-4 py-1.5 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-        >
-          <span aria-hidden>⚙️</span>
-          {edicion ? 'Salir del modo edición' : 'Configurar tarifario'}
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setEdicion((e) => !e)}
+            className="inline-flex items-center gap-2 rounded-full border-2 border-[#1E2433] bg-white px-4 py-1.5 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+          >
+            <span aria-hidden>⚙️</span>
+            {edicion ? 'Salir del modo edición' : 'Configurar tarifario'}
+          </button>
+        )}
       </div>
 
-      {edicion && (
+      {isAdmin && edicion && (
         <div className="mb-6 rounded-2xl border-[3px] border-[#1E2433] bg-[#FFF9EC] p-4 shadow-[4px_4px_0_0_#1E2433]">
           <p className="font-display text-lg font-bold">Modo edición</p>
           <p className="mt-1 text-sm font-semibold text-[#5A6275]">

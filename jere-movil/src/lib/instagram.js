@@ -24,7 +24,7 @@ const DEMO = [
     id: 'demo-2',
     url: 'https://www.instagram.com/jerefijo/',
     imagen: '/labebi.svg',
-    leyenda: 'La Bebi lista para carretera 🚐',
+    leyenda: 'Lista para la carretera 🚐',
     demo: true,
   },
   {

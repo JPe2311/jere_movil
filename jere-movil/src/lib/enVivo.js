@@ -63,7 +63,7 @@ export function recordarEvento(id) {
 export async function crearEvento({ titulo, plataforma, streamUrl } = {}) {
   if (!db) throw new Error('Firebase sin configurar.');
   const ref = await addDoc(collection(db, COLECCION), {
-    titulo: titulo || 'En vivo desde La Bebi',
+    titulo: titulo || 'En vivo desde la ruta',
     plataforma: plataforma || '',
     streamUrl: (streamUrl || '').trim(),
     estado: 'activo',
@@ -92,7 +92,7 @@ export async function registrarPosicion(id, { lat, lng, ts = Date.now() }, conTr
 export async function actualizarStream(id, { titulo, plataforma, streamUrl }) {
   if (!db || !id) return;
   await updateDoc(doc(db, COLECCION, id), {
-    titulo: titulo || 'En vivo desde La Bebi',
+    titulo: titulo || 'En vivo desde la ruta',
     plataforma: plataforma || '',
     streamUrl: (streamUrl || '').trim(),
   });

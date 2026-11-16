@@ -162,7 +162,7 @@ export default function CamperModalViewer({ isOpen, onClose }) {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🚐</span>
             <div>
-              <h2 className="font-display text-xl font-black">"La Bebi" 3D • Toyota Hilux Camper</h2>
+              <h2 className="font-display text-xl font-black">Mi furgoneta 3D • Toyota Hilux Camper</h2>
               <p className="text-xs font-bold text-noche/75">Modelo 3D interactivo con la pintura real de montaña</p>
             </div>
           </div>

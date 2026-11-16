@@ -5,7 +5,7 @@ const foto = (seed) => `https://picsum.photos/seed/${seed}/900/600`;
 
 export const demoPuntos = [
   { id: 'demo-1', orden: 1, categoria: 'importante', ciudad: 'Buenos Aires', pais: 'Argentina', lat: -34.6037, lng: -58.3816,
-    fechaHora: '2025-03-01T09:00:00', titulo: '¡Arranca la aventura con La Bebi!', titulo_en: 'The adventure begins!',
+    fechaHora: '2025-03-01T09:00:00', titulo: '¡Arranca la aventura!', titulo_en: 'The adventure begins!',
     descripcion: 'Punto de partida de la travesía. Primer tanque lleno y rumbo a la ruta.',
     descripcion_en: 'Starting point of the trip. First full tank and hitting the road.',
     fotos: [foto('jere1'), foto('jere2')], videoUrl: '' },
@@ -15,7 +15,7 @@ export const demoPuntos = [
     descripcion_en: 'Epic postcard with the Andes Mountains in the background.',
     fotos: [foto('jere3')], videoUrl: '' },
   { id: 'demo-3', orden: 3, categoria: 'rara', ciudad: 'Paso Los Libertadores', pais: 'Chile', lat: -32.8277, lng: -70.0814,
-    fechaHora: '2025-03-20T12:00:00', titulo: '¡La Bebi tosió a 3.800 metros!', titulo_en: 'La Bebi sputtered at 3,800m!',
+    fechaHora: '2025-03-20T12:00:00', titulo: '¡La furgoneta tosió a 3.800 metros!', titulo_en: 'The van sputtered at 3,800m!',
     descripcion: 'Situación rara: con la altura faltó oxígeno, pero con paciencia y mate caliente cruzamos como campeones.',
     descripcion_en: 'Strange situation: high altitude oxygen drop, but we pushed through with hot mate.',
     fotos: [], videoUrl: '' },
@@ -40,7 +40,7 @@ export const demoBloques = [
   { id: 'demo-b1', tipo: 'texto', orden: 1, titulo: '¡Hola, soy Jere!', titulo_en: "Hi, I'm Jere!",
     contenido: 'Este es un texto de ejemplo. Desde /admin vas a poder escribir tu historia, sumar fotos y videos y ordenar todo a gusto.',
     contenido_en: 'This is sample text. From /admin you can write your story, add photos and videos, and reorder everything.' },
-  { id: 'demo-b2', tipo: 'tarjeta', orden: 2, icono: '🚐', color: 'sol', titulo: 'La Bebi', titulo_en: 'La Bebi',
+  { id: 'demo-b2', tipo: 'tarjeta', orden: 2, icono: '🚐', color: 'sol', titulo: 'Mi furgoneta', titulo_en: 'My van',
     contenido: 'Mi casa sobre ruedas. Una pickup blanca con módulo vivienda.', contenido_en: 'My home on wheels. A white pickup with a camper module.' },
   { id: 'demo-b3', tipo: 'tarjeta', orden: 3, icono: '🏔️', color: 'monte', titulo: 'Montañas', titulo_en: 'Mountains',
     contenido: 'Tarjeta de ejemplo para destacar algo importante.', contenido_en: 'Sample card to highlight something important.' },

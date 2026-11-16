@@ -113,7 +113,7 @@ export default function CamperMapCanvas({ heading = 0, isMoving = false, onClick
       ref={containerRef}
       onClick={onClick}
       className="cursor-pointer transition-transform hover:scale-110 active:scale-95"
-      title="🚐 ¡Click para inspeccionar La Bebi en 3D 360°!"
+      title="🚐 ¡Click para ver la furgoneta en 3D 360°!"
       style={{ width: 110, height: 110 }}
     />
   );

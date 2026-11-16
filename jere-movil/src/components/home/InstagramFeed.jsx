@@ -70,7 +70,7 @@ export default function InstagramFeed({ cuenta = 'jerefijo', cantidad = 6 }) {
           <div className="mb-2 text-4xl" aria-hidden>📸</div>
           <h3 className="font-display text-xl font-extrabold text-noche">Seguime en Instagram</h3>
           <p className="mx-auto mb-5 mt-1 max-w-md text-sm font-semibold text-noche/70">
-            Las fotos y videos del día a día de La Bebi los subo a @{cuenta}.
+            Las fotos y videos del día a día los subo a @{cuenta}.
           </p>
           <a
             href={PERFIL}

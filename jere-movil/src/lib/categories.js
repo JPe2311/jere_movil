@@ -31,7 +31,7 @@ export const CATEGORIAS_PUNTOS = {
   },
   acampada: {
     id: 'acampada',
-    nombre: 'Acampada / Noche en La Bebi',
+    nombre: 'Acampada / Noche en la furgoneta',
     nombre_en: 'Campsite / Van Night',
     corto: 'Acampada',
     corto_en: 'Camp',

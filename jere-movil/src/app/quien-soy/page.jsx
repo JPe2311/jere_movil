@@ -37,10 +37,10 @@ export default function QuienSoyPage() {
   const { t } = useI18n();
   const { items, loading } = useCollection('quien_soy_bloques', 'orden', 'asc');
 
-  // Ficha técnica de La Bebi. `value: null` → se muestra "Próximamente"
+  // Ficha técnica de la furgoneta. `value: null` → se muestra "Próximamente"
   // (para completar con los datos reales cuando se quieran sumar).
   const ficha = [
-    { emoji: '🏷️', label: t('labebi_spec_nombre'), value: 'La Bebi 🚐' },
+    { emoji: '🏷️', label: t('labebi_spec_nombre'), value: 'Mi furgoneta 🚐' },
     { emoji: '🚙', label: t('labebi_spec_base'), value: 'Toyota Hilux' },
     { emoji: '🏠', label: t('labebi_spec_tipo'), value: t('labebi_spec_tipo_v') },
     { emoji: '🎨', label: t('labebi_spec_color'), value: t('labebi_spec_color_v') },
@@ -139,7 +139,7 @@ export default function QuienSoyPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/labebi.svg"
-                alt="La Bebi — Toyota Hilux Camper"
+                alt="Mi furgoneta — Toyota Hilux Camper"
                 className="mx-auto w-full max-w-[280px]"
               />
             </motion.div>

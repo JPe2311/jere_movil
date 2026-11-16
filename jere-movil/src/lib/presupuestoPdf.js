@@ -168,8 +168,8 @@ export function generarPresupuestoPDF(datos) {
       <img class="logo" src="${logo}" alt="Jere Móvil" />
       <div>
         <span class="tag">PROPUESTA DE AUSPICIOS • 2026</span>
-        <h1>Jere Móvil · La Bebi</h1>
-        <div class="sub">Viajá con La Bebi · Sumá tu marca a la ruta</div>
+        <h1>Jere Móvil</h1>
+        <div class="sub">Acompañame en este viaje · Sumate a la comunidad</div>
       </div>
     </div>
 
