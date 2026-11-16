@@ -47,6 +47,7 @@ export function textoPresupuesto(datos) {
       ? `Bonificación (${datos.descuento}%): -${precioARS(datos.descuentoMonto)}`
       : null,
     `Total final: ${precioARS(datos.total)}`,
+    datos.serviciosConsulta ? `\nServicios de interés: ${datos.serviciosConsulta}` : null,
     datos.campania ? `\nCampaña: ${datos.campania}` : null,
     datos.validez ? `Validez: ${datos.validez}` : null,
     datos.notas ? `Notas: ${datos.notas}` : null,
@@ -141,6 +142,10 @@ export function generarPresupuestoPDF(datos) {
   .notas { margin-top: 14px; border: 2px dashed ${PALETA.tinta}; border-radius: 10px; padding: 8px 11px; background: #fff; font-size: 10px; color: ${PALETA.gris}; break-inside: avoid; }
   .notas b { color: ${PALETA.tinta}; font-size: 9px; text-transform: uppercase; letter-spacing: .7px; }
 
+  .pedido { margin-top: 12px; border: 2px solid ${PALETA.tinta}; border-radius: 10px; padding: 8px 11px; background: ${PALETA.crema}; font-size: 10px; color: ${PALETA.tinta}; break-inside: avoid; }
+  .pedido b { display: block; margin-bottom: 2px; font-size: 9px; text-transform: uppercase; letter-spacing: .7px; }
+  .pedido-nota { margin-top: 3px; font-size: 9px; font-weight: 600; color: ${PALETA.gris}; }
+
   .pasos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; break-inside: avoid; }
   .paso { background: #fff; border: 2px solid ${PALETA.tinta}; border-radius: 10px; padding: 8px; }
   .paso .n { width: 17px; height: 17px; border-radius: 999px; border: 2px solid ${PALETA.tinta}; display: grid; place-items: center; font-size: 9px; font-weight: 800; background: ${PALETA.amarillo}; margin-bottom: 4px; }
@@ -185,6 +190,12 @@ export function generarPresupuestoPDF(datos) {
       <h2>Detalle de la propuesta</h2>
     </div>
     ${filas || '<p>No se seleccionaron ítems.</p>'}
+
+    ${
+      datos.serviciosConsulta
+        ? `<div class="pedido"><b>Servicios de interés</b><br />${esc(datos.serviciosConsulta)}<div class="pedido-nota">Se cotizan aparte, según disponibilidad y fechas de la ruta.</div></div>`
+        : ''
+    }
 
     <div class="totales">
       <div class="totales-caja">

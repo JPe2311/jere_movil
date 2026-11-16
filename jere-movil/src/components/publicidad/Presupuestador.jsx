@@ -72,14 +72,13 @@ export default function Presupuestador() {
   const [tarifario, setTarifario] = useState(null);
   const [edicion, setEdicion] = useState(false);
   const [paqueteId, setPaqueteId] = useState(null);
-  const [carrito, setCarrito] = useState({});
   const [descuento, setDescuento] = useState(0);
-  const [descuentoManual, setDescuentoManual] = useState(false);
   const [avisoGuardado, setAvisoGuardado] = useState(false);
   const [cliente, setCliente] = useState({
     marca: '',
     campania: '',
     validez: '30 días',
+    servicios: '',
     notas: '',
   });
   const [nuevoPaquete, setNuevoPaquete] = useState(null);
@@ -110,32 +109,12 @@ export default function Presupuestador() {
       subtotal: paqueteSel.precio,
     });
   }
-  for (const s of tarifario?.servicios || []) {
-    const cant = carrito[s.id] || 0;
-    if (cant > 0) {
-      items.push({
-        key: `srv-${s.id}`,
-        nombre: s.nombre,
-        detalle: s.detalle,
-        foto: s.foto,
-        cantidad: cant,
-        unitario: s.precio,
-        subtotal: s.precio * cant,
-      });
-    }
-  }
 
   const subtotal = items.reduce((acc, i) => acc + i.subtotal, 0);
-  const unidades = items.reduce((acc, i) => acc + i.cantidad, 0);
   const descuentoNum = Math.min(Math.max(Number(descuento) || 0, 0), 100);
   const descuentoMonto = Math.round((subtotal * descuentoNum) / 100);
   const total = subtotal - descuentoMonto;
-
-  // Sugerencia automática: 3 o más ítems → 10% (siempre editable a mano).
-  useEffect(() => {
-    if (descuentoManual) return;
-    setDescuento(unidades >= 3 ? 10 : 0);
-  }, [unidades, descuentoManual]);
+  const serviciosConsulta = (cliente.servicios || '').trim();
 
   if (!tarifario) {
     return (
@@ -149,6 +128,7 @@ export default function Presupuestador() {
     marca: cliente.marca,
     campania: cliente.campania,
     validez: cliente.validez,
+    serviciosConsulta,
     notas: cliente.notas,
     fecha: new Date(),
     items,
@@ -160,7 +140,7 @@ export default function Presupuestador() {
 
   function descargarPdf() {
     if (items.length === 0) {
-      window.alert('Sumá al menos un paquete o servicio para generar el presupuesto.');
+      window.alert('Elegí un paquete para armar la propuesta.');
       return;
     }
     generarPresupuestoPDF(datosPresupuesto());
@@ -218,11 +198,6 @@ export default function Presupuestador() {
   function eliminarServicio(id) {
     if (!window.confirm('¿Eliminar este servicio del tarifario?')) return;
     setTarifario((t) => ({ ...t, servicios: t.servicios.filter((s) => s.id !== id) }));
-    setCarrito((c) => {
-      const next = { ...c };
-      delete next[id];
-      return next;
-    });
   }
 
   function agregarServicio() {
@@ -275,19 +250,7 @@ export default function Presupuestador() {
     borrarTarifario();
     setTarifario(cargarTarifario());
     setPaqueteId(null);
-    setCarrito({});
     setDescuento(0);
-    setDescuentoManual(false);
-  }
-
-  function sumarServicio(id, delta) {
-    setCarrito((c) => {
-      const n = (c[id] || 0) + delta;
-      const next = { ...c };
-      if (n <= 0) delete next[id];
-      else next[id] = n;
-      return next;
-    });
   }
 
   const paquetesVisibles = tarifario.paquetes.filter((p) => edicion || p.activo);
@@ -295,12 +258,12 @@ export default function Presupuestador() {
 
   return (
     <div>
-      {/* Barra de edición */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-bold text-[#5A6275]">
-          Armá tu combo: elegí un paquete y sumá servicios sueltos.
-        </p>
-        {isAdmin && (
+      {/* Barra de edición (solo admin) */}
+      {isAdmin && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-bold text-[#5A6275]">
+            Mirá los servicios, elegí un paquete y armá tu propuesta.
+          </p>
           <button
             type="button"
             onClick={() => setEdicion((e) => !e)}
@@ -309,8 +272,8 @@ export default function Presupuestador() {
             <span aria-hidden>⚙️</span>
             {edicion ? 'Salir del modo edición' : 'Configurar tarifario'}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {isAdmin && edicion && (
         <div className="mb-6 rounded-2xl border-[3px] border-[#1E2433] bg-[#FFF9EC] p-4 shadow-[4px_4px_0_0_#1E2433]">
@@ -440,14 +403,142 @@ export default function Presupuestador() {
         {/* Catálogo */}
         <div className="space-y-8">
           <div>
-            <h3 className="mb-3 font-display text-xl font-bold">Paquetes</h3>
+            <h3 className="mb-1 font-display text-xl font-bold">Servicios individuales</h3>
+            <p className="mb-3 text-sm font-semibold text-[#5A6275]">
+              Precios por video vlog. Si te interesa alguno, contanos cuál en el presupuesto.
+            </p>
+            {edicion ? (
+              <div className="space-y-2">
+                {serviciosVisibles.map((s) => (
+                  <div
+                    key={s.id}
+                    className={`rounded-xl border-2 border-[#1E2433] bg-white p-3 shadow-[2px_2px_0_0_#1E2433] ${
+                      s.activo ? '' : 'opacity-50'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="grid gap-2 sm:grid-cols-[1.1fr_1.5fr_auto_auto] sm:items-center">
+                        <input
+                          className={inputEdit}
+                          value={s.nombre}
+                          onChange={(e) => actualizarServicio(s.id, { nombre: e.target.value })}
+                        />
+                        <input
+                          className={inputEdit}
+                          value={s.detalle}
+                          onChange={(e) => actualizarServicio(s.id, { detalle: e.target.value })}
+                        />
+                        <input
+                          type="number"
+                          className={`${inputEdit} sm:w-28`}
+                          value={s.precio}
+                          onChange={(e) =>
+                            actualizarServicio(s.id, { precio: Number(e.target.value) || 0 })
+                          }
+                        />
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            activo={s.activo}
+                            onChange={(v) => actualizarServicio(s.id, { activo: v })}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => eliminarServicio(s.id)}
+                            className="rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
+                            title="Eliminar servicio"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 rounded-lg border-2 border-dashed border-[#CBD5E1] bg-[#FFF9EC] p-2">
+                        <FotoServicio foto={s.foto} nombre={s.nombre} className="h-12 w-16" />
+                        <label className="cursor-pointer rounded-full border-2 border-[#1E2433] bg-white px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433]">
+                          📷 Subir foto
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={(e) => {
+                              subirFoto(s.id, e.target.files?.[0]);
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        <input
+                          className={`${inputEdit} min-w-[180px] flex-1`}
+                          placeholder="o pegá una URL de imagen (https://...)"
+                          value={s.foto.startsWith('data:') ? '' : s.foto}
+                          onChange={(e) => actualizarServicio(s.id, { foto: e.target.value })}
+                        />
+                        {s.foto && (
+                          <button
+                            type="button"
+                            onClick={() => actualizarServicio(s.id, { foto: '' })}
+                            className="rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
+                            title="Quitar foto"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {serviciosVisibles.map((s) => (
+                  <article
+                    key={s.id}
+                    className="flex flex-col overflow-hidden rounded-2xl border-[3px] border-[#1E2433] bg-white shadow-[4px_4px_0_0_#1E2433]"
+                  >
+                    {s.foto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={s.foto}
+                        alt={`Foto de ejemplo de ${s.nombre}`}
+                        className="h-40 w-full border-b-[3px] border-[#1E2433] object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-40 w-full flex-col items-center justify-center gap-1 border-b-[3px] border-[#1E2433] bg-[#FFF9EC] text-[11px] font-bold text-[#5A6275]">
+                        <span className="text-2xl" aria-hidden>
+                          📷
+                        </span>
+                        <span>Foto de ejemplo</span>
+                      </div>
+                    )}
+                    <div className="flex flex-1 flex-col p-4">
+                      <h4 className="font-kit text-lg font-bold leading-tight">{s.nombre}</h4>
+                      <p className="mt-1 flex-1 text-sm font-semibold leading-relaxed text-[#5A6275]">
+                        {s.detalle}
+                      </p>
+                      <p className="mt-3 font-display text-xl font-bold">{precioARS(s.precio)}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+            {serviciosVisibles.length === 0 && (
+              <p className="rounded-xl border-2 border-dashed border-[#1E2433] p-4 text-center text-sm font-bold text-[#5A6275]">
+                No hay servicios activos. Activá alguno en el modo edición.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="mb-1 font-display text-xl font-bold">Paquetes</h3>
+            <p className="mb-3 text-sm font-semibold text-[#5A6275]">
+              Tres formas de sumarte. Elegí la que mejor va con tu marca.
+            </p>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {paquetesVisibles.map((p) => (
                 <article
                   key={p.id}
-                  className={`relative flex flex-col rounded-2xl border-[3px] border-[#1E2433] bg-white p-4 shadow-[4px_4px_0_0_#1E2433] ${
-                    p.activo ? '' : 'opacity-50'
-                  }`}
+                  className={`relative flex flex-col rounded-2xl border-[3px] border-[#1E2433] p-4 shadow-[4px_4px_0_0_#1E2433] transition ${
+                    paqueteId === p.id ? 'bg-[#FFF9EC]' : 'bg-white'
+                  } ${p.activo ? '' : 'opacity-50'}`}
                 >
                   {edicion ? (
                     <div className="space-y-2">
@@ -547,152 +638,17 @@ export default function Presupuestador() {
                       <button
                         type="button"
                         onClick={() => setPaqueteId(paqueteId === p.id ? null : p.id)}
+                        aria-pressed={paqueteId === p.id}
                         className={`mt-2 rounded-full border-2 border-[#1E2433] px-3 py-1.5 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
                           paqueteId === p.id ? 'bg-[#2B9E63] text-white' : 'bg-[#F8C630]'
                         }`}
                       >
-                        {paqueteId === p.id ? '✓ En el presupuesto' : '+ Sumar al presupuesto'}
+                        {paqueteId === p.id ? '✓ Elegido' : 'Elegir este paquete'}
                       </button>
                     </>
                   )}
                 </article>
               ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="mb-1 font-display text-xl font-bold">Servicios a medida</h3>
-            <p className="mb-3 text-sm font-semibold text-[#5A6275]">
-              Precios por video vlog. Sumá los que quieras y ajustá la cantidad.
-            </p>
-            <div className="space-y-2">
-              {serviciosVisibles.map((s) => {
-                const cant = carrito[s.id] || 0;
-                return (
-                  <div
-                    key={s.id}
-                    className={`rounded-xl border-2 border-[#1E2433] bg-white p-3 shadow-[2px_2px_0_0_#1E2433] ${
-                      s.activo ? '' : 'opacity-50'
-                    }`}
-                  >
-                    {edicion ? (
-                      <div className="space-y-2">
-                        <div className="grid gap-2 sm:grid-cols-[1.1fr_1.5fr_auto_auto] sm:items-center">
-                          <input
-                            className={inputEdit}
-                            value={s.nombre}
-                            onChange={(e) => actualizarServicio(s.id, { nombre: e.target.value })}
-                          />
-                          <input
-                            className={inputEdit}
-                            value={s.detalle}
-                            onChange={(e) => actualizarServicio(s.id, { detalle: e.target.value })}
-                          />
-                          <input
-                            type="number"
-                            className={`${inputEdit} sm:w-28`}
-                            value={s.precio}
-                            onChange={(e) =>
-                              actualizarServicio(s.id, { precio: Number(e.target.value) || 0 })
-                            }
-                          />
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              activo={s.activo}
-                              onChange={(v) => actualizarServicio(s.id, { activo: v })}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => eliminarServicio(s.id)}
-                              className="rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
-                              title="Eliminar servicio"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 rounded-lg border-2 border-dashed border-[#CBD5E1] bg-[#FFF9EC] p-2">
-                          <FotoServicio foto={s.foto} nombre={s.nombre} className="h-12 w-16" />
-                          <label className="cursor-pointer rounded-full border-2 border-[#1E2433] bg-white px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433]">
-                            📷 Subir foto
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="sr-only"
-                              onChange={(e) => {
-                                subirFoto(s.id, e.target.files?.[0]);
-                                e.target.value = '';
-                              }}
-                            />
-                          </label>
-                          <input
-                            className={`${inputEdit} min-w-[180px] flex-1`}
-                            placeholder="o pegá una URL de imagen (https://...)"
-                            value={s.foto.startsWith('data:') ? '' : s.foto}
-                            onChange={(e) => actualizarServicio(s.id, { foto: e.target.value })}
-                          />
-                          {s.foto && (
-                            <button
-                              type="button"
-                              onClick={() => actualizarServicio(s.id, { foto: '' })}
-                              className="rounded-md border-2 border-[#1E2433] bg-white px-1.5 text-xs font-extrabold"
-                              title="Quitar foto"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-start gap-3">
-                        <FotoServicio foto={s.foto} nombre={s.nombre} />
-                        <div className="flex flex-1 flex-wrap items-center gap-3">
-                          <div className="min-w-[160px] flex-1">
-                            <p className="font-extrabold leading-tight">{s.nombre}</p>
-                            <p className="text-xs font-semibold text-[#5A6275]">{s.detalle}</p>
-                          </div>
-                          <p className="font-display text-lg font-bold">{precioARS(s.precio)}</p>
-                          {cant === 0 ? (
-                            <button
-                              type="button"
-                              onClick={() => sumarServicio(s.id, 1)}
-                              className="rounded-full border-2 border-[#1E2433] bg-white px-3 py-1 text-xs font-extrabold shadow-[2px_2px_0_0_#1E2433]"
-                            >
-                              + Sumar
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-1 rounded-full border-2 border-[#1E2433] bg-[#F8C630] px-1">
-                              <button
-                                type="button"
-                                onClick={() => sumarServicio(s.id, -1)}
-                                className="h-6 w-6 rounded-full font-extrabold"
-                                aria-label={`Quitar un ${s.nombre}`}
-                              >
-                                −
-                              </button>
-                              <span className="w-4 text-center text-sm font-extrabold">{cant}</span>
-                              <button
-                                type="button"
-                                onClick={() => sumarServicio(s.id, 1)}
-                                className="h-6 w-6 rounded-full font-extrabold"
-                                aria-label={`Agregar un ${s.nombre}`}
-                              >
-                                +
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {serviciosVisibles.length === 0 && (
-                <p className="rounded-xl border-2 border-dashed border-[#1E2433] p-4 text-center text-sm font-bold text-[#5A6275]">
-                  No hay servicios activos. Activá alguno en el modo edición.
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -703,7 +659,7 @@ export default function Presupuestador() {
             <div className="flex items-center justify-between">
               <h3 className="font-display text-xl font-bold">Tu presupuesto</h3>
               <span className="rounded-full border-2 border-[#1E2433] bg-[#2997D8] px-2 py-0.5 text-[10px] font-extrabold text-white">
-                {unidades} {unidades === 1 ? 'ítem' : 'ítems'}
+                {paqueteSel ? '1 paquete' : 'sin paquete'}
               </span>
             </div>
 
@@ -711,7 +667,7 @@ export default function Presupuestador() {
 
             {items.length === 0 ? (
               <p className="py-4 text-center text-sm font-semibold text-[#5A6275]">
-                Todavía no sumaste nada. Empezá por un paquete o un servicio.
+                Elegí un paquete de la lista para armar la propuesta.
               </p>
             ) : (
               <ul className="space-y-2">
@@ -749,17 +705,11 @@ export default function Presupuestador() {
                 max="100"
                 value={descuento}
                 onChange={(e) => {
-                  setDescuentoManual(true);
                   setDescuento(e.target.value);
                 }}
                 className="w-20 rounded-lg border-2 border-[#1E2433] px-2 py-1 text-right text-sm font-extrabold"
               />
             </div>
-            {unidades >= 3 && !descuentoManual && (
-              <p className="mt-1 text-[11px] font-bold text-[#2B9E63]">
-                Sugerimos 10% por sumar 3 o más servicios de la misma campaña.
-              </p>
-            )}
             {descuentoNum > 0 && (
               <div className="mt-1 flex items-center justify-between text-sm font-bold text-[#2B9E63]">
                 <span>Descuento</span>
@@ -803,6 +753,16 @@ export default function Presupuestador() {
                 />
               </label>
               <label className="block text-[11px] font-extrabold uppercase tracking-wide text-[#5A6275]">
+                Servicios que te interesan
+                <textarea
+                  rows={2}
+                  className="mt-1 w-full rounded-lg border-2 border-[#1E2433] px-2 py-1 text-sm font-semibold text-[#1E2433]"
+                  placeholder="Ej: Mención de apertura + 2 sets de stories"
+                  value={cliente.servicios}
+                  onChange={(e) => setCliente((c) => ({ ...c, servicios: e.target.value }))}
+                />
+              </label>
+              <label className="block text-[11px] font-extrabold uppercase tracking-wide text-[#5A6275]">
                 Notas adicionales
                 <textarea
                   rows={2}
@@ -828,7 +788,7 @@ export default function Presupuestador() {
               onClick={(e) => {
                 if (items.length === 0) {
                   e.preventDefault();
-                  window.alert('Sumá al menos un paquete o servicio para enviarlo.');
+                  window.alert('Elegí un paquete para enviar la propuesta.');
                 }
               }}
               className="mt-2 block w-full rounded-full border-[3px] border-[#1E2433] bg-[#2B9E63] px-4 py-2 text-center font-display text-sm font-bold text-white shadow-[4px_4px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
@@ -840,13 +800,11 @@ export default function Presupuestador() {
                 type="button"
                 onClick={() => {
                   setPaqueteId(null);
-                  setCarrito({});
                   setDescuento(0);
-                  setDescuentoManual(false);
                 }}
                 className="mt-2 w-full text-center text-xs font-extrabold text-[#5A6275] underline"
               >
-                Vaciar presupuesto
+                Quitar paquete
               </button>
             )}
           </div>

@@ -337,9 +337,9 @@ export default function PublicidadPage() {
           <TituloSeccion
             badge="04. Elegí tu ruta"
             color="#F37021"
-            titulo="Paquetes, servicios y presupuesto"
+            titulo="Servicios, paquetes y presupuesto"
           >
-            Seleccioná un paquete, sumá servicios sueltos y descargá la propuesta en PDF.
+            Mirá los servicios individuales, elegí un paquete y descargá la propuesta en PDF.
           </TituloSeccion>
 
           <Presupuestador />
