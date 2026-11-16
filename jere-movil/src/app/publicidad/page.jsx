@@ -158,20 +158,6 @@ export default function PublicidadPage() {
             <p className="mt-4 text-lg font-bold sm:text-xl" style={{ color: GRIS }}>
               Acompañame en este viaje • Sumate a la comunidad
             </p>
-            <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
-              <a
-                href="#paquetes"
-                className="rounded-full border-[3px] border-[#1E2433] bg-[#F8C630] px-6 py-3 font-kit text-base font-bold shadow-[4px_4px_0_0_#1E2433] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-              >
-                Armar mi presupuesto →
-              </a>
-              <a
-                href="#contacto"
-                className="rounded-full border-2 border-[#1E2433] bg-white px-6 py-3 font-kit text-base font-bold shadow-[2px_2px_0_0_#1E2433] transition hover:bg-[#FFF9EC]"
-              >
-                Hablar con Jere
-              </a>
-            </div>
           </div>
         </div>
         <div className="zigzag-yellow" aria-hidden />
