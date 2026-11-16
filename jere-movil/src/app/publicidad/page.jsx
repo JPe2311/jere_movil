@@ -141,7 +141,7 @@ export default function PublicidadPage() {
             backgroundImage: `url(${headerImg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            opacity: 0.14,
+            opacity: 0.28,
           }}
           aria-hidden
         />
