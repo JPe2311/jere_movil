@@ -1,5 +1,6 @@
 import Presupuestador from '@/components/publicidad/Presupuestador';
 import FormatosYoutube from '@/components/publicidad/FormatosYoutube';
+import headerImg from '../../../header.png';
 
 export const metadata = {
   title: 'Publicidad · Jere Móvil',
@@ -133,7 +134,17 @@ export default function PublicidadPage() {
     <div className="font-kit-body bg-[#FDF6E7] text-[#1E2433]">
       {/* ================= HERO ================= */}
       <header className="relative overflow-hidden">
-        <div className="mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-8 sm:pt-14">
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url(${headerImg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.14,
+          }}
+          aria-hidden
+        />
+        <div className="mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-8 sm:pt-14 relative z-10">
           <div className="flex flex-col items-center text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
